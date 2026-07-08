@@ -300,6 +300,7 @@ tr:hover td{background:#f8fffe;}
 const API_BASE = 'https://dental-92vv.onrender.com';let TOKEN = localStorage.getItem('dc_token') || null;
 let USER  = JSON.parse(localStorage.getItem('dc_user') || 'null');
 let CURRENT_PATIENT_ID = null;
+let REPORT_MODE = 'card'; // 'card' | 'referral' — which document renderReportCard builds
 let CACHE = { patients: [], staff: [], services: [] };
 let BILL_ITEMS = [];
 
@@ -345,7 +346,7 @@ const PERMISSIONS = {
     pages:['dashboard','pharmacy','prescriptions'],
     actions:['add-drug','dispense-rx']
   },
-  assistant: {
+  nurse: {
     pages:['dashboard','appointments','patients','patient-profile'],
     actions:['add-record']
   },
@@ -385,7 +386,7 @@ const NAV_CFG = {
     {s:'Pharmacy'},{id:'dashboard',icon:'📊',lbl:'Dashboard'},
     {id:'pharmacy',icon:'🏪',lbl:'Drug Inventory'},{id:'prescriptions',icon:'💊',lbl:'Prescriptions'},
   ],
-  assistant:[
+  nurse:[
     {s:'Care'},{id:'dashboard',icon:'📊',lbl:'Dashboard'},
     {id:'appointments',icon:'📅',lbl:'Appointments'},{id:'patients',icon:'👤',lbl:'Patients'},
   ],
@@ -803,7 +804,7 @@ async function renderProfile(){
         </div></div>
       <div style="display:flex;gap:8px;">
         ${canDo('book-appt')?`<button class="btn btn-teal btn-sm" onclick="openBookApptModal()">📅 Book</button>`:''}
-        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;" onclick="showPage('report-card')">🖨️ Report Card</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;" onclick="REPORT_MODE='card';showPage('report-card')">🖨️ Report Card</button>
       </div></div>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab(this,'tab-chart')">🦷 Dental Chart</button>
@@ -1180,7 +1181,7 @@ function openAddStaffModal(){
     <div class="fg"><label>Full Name *</label><input type="text" id="st-name"></div>
     <div class="fg"><label>Email *</label><input type="email" id="st-email"></div>
     <div class="fg"><label>Temporary Password *</label><input type="text" id="st-pass"></div>
-    <div class="form-row"><div class="fg"><label>Role *</label><select id="st-role"><option value="dentist">Dentist</option><option value="receptionist">Receptionist</option><option value="pharmacist">Pharmacist</option><option value="assistant">Assistant</option><option value="admin">Admin</option></select></div>
+    <div class="form-row"><div class="fg"><label>Role *</label><select id="st-role"><option value="dentist">Dentist</option><option value="receptionist">Receptionist</option><option value="pharmacist">Pharmacist</option><option value="nurse">Nurse</option><option value="admin">Admin</option></select></div>
     <div class="fg"><label>Specialization</label><input type="text" id="st-spec"></div></div>
     <div class="fg"><label>Phone</label><input type="text" id="st-phone"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal('m-add-staff')">Cancel</button><button class="btn btn-teal" onclick="submitAddStaff()">Add Staff</button></div>`;
@@ -1205,29 +1206,76 @@ async function toggleStaffStatus(id, status){
 async function renderReports(){
   const el = document.getElementById('page-reports');
   const reports = [
-    {icon:'🦷',title:'Patient Report Card',desc:'Full dental record with chart summary — live data',action:()=>{ if(!CURRENT_PATIENT_ID){toast('Open a patient profile first','e');return;} showPage('report-card'); }},
+    {icon:'🦷',title:'Patient Report Card',desc:'Full dental record with chart summary — live data',action:()=>{ if(!CURRENT_PATIENT_ID){toast('Open a patient profile first','e');return;} REPORT_MODE='card'; showPage('report-card'); }},
     {icon:'📄',title:'Invoice / Receipt',desc:'Open the billing page to review invoices and receipts',action:()=>{ showPage('billing'); }},
     {icon:'💊',title:'Prescription Slip',desc:'View prescriptions and print slips from the prescriptions page',action:()=>{ if(!CURRENT_PATIENT_ID){toast('Open a patient profile first','e');return;} showPage('prescriptions'); }},
-    {icon:'📋',title:'Referral Letter',desc:'Generate a patient referral using the current profile data',action:()=>{ if(!CURRENT_PATIENT_ID){toast('Open a patient profile first','e');return;} renderReferralLetter(); }},
+    {icon:'📋',title:'Referral Letter',desc:'Generate a patient referral using live chart and visit data',action:()=>{ if(!CURRENT_PATIENT_ID){toast('Open a patient profile first','e');return;} REPORT_MODE='referral'; showPage('report-card'); }},
     {icon:'📊',title:'Monthly Revenue',desc:'Review monthly revenue and invoice summary on the billing page',action:()=>{ showPage('billing'); }},
     {icon:'📅',title:'Staff Attendance',desc:'View staff availability summary on the staff page',action:()=>{ showPage('staff'); }},
   ];
-  el.innerHTML = `<div class="three-col">${reports.map(r=>`
-    <div class="card" style="cursor:pointer;" onclick="${r.real?'':`toast('${esc(r.title)} isn\\'t wired to a backend yet','e')`}" ${r.real?`onclick="reportsAction(${reports.indexOf(r)})"`:''}>
+  // Uses data-idx + a single delegated listener instead of inline onclick strings —
+  // avoids the duplicate-attribute bug where a second onclick="" was silently dropped.
+  el.innerHTML = `<div class="three-col">${reports.map((r,i)=>`
+    <div class="card report-card-tile" data-idx="${i}" style="cursor:pointer;">
       <div class="card-body" style="text-align:center;padding:20px 14px;">
         <div style="font-size:32px;margin-bottom:8px;">${r.icon}</div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">${r.title}</div>
-        <div style="font-size:12px;color:var(--text-2);margin-bottom:12px;">${r.desc}</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">${esc(r.title)}</div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:12px;">${esc(r.desc)}</div>
         <button class="btn btn-teal btn-sm">View</button>
       </div></div>`).join('')}</div>`;
   window.__REPORTS = reports;
+  el.querySelectorAll('.report-card-tile').forEach(tile => {
+    tile.addEventListener('click', () => window.__REPORTS[parseInt(tile.dataset.idx)].action());
+  });
 }
-function reportsAction(i){ const r = window.__REPORTS[i]; if (r && r.action) r.action(); }
+
+// =====================================================================
+// REFERRAL LETTER (live data via GET /reports/referral/:patientId)
+// =====================================================================
+async function renderReferralLetter(){
+  const el = document.getElementById('page-report-card');
+  const id = CURRENT_PATIENT_ID;
+  el.innerHTML = '<div class="spinner">Building referral letter…</div>';
+  const data = await api(`/reports/referral/${id}`);
+  const { patient, latestVisit, dentalChart, prescriptions } = data;
+  const chartSummary = dentalChart.length
+    ? dentalChart.sort((a,b)=>a.tooth_number-b.tooth_number).map(c=>`#${c.tooth_number} (${esc(c.condition)})`).join(', ')
+    : 'No dental chart entries on file.';
+  const rxSummary = prescriptions.length
+    ? prescriptions.map(p=>`${esc(p.drug_name)} ${esc(p.dosage)} — ${esc(p.frequency)}, ${esc(p.duration)}`).join('<br>')
+    : 'No recent prescriptions on file.';
+  el.innerHTML = `
+    <div class="sec-hdr"><button class="btn btn-outline btn-sm" onclick="showPage('patient-profile')">← Back</button><button class="btn btn-teal" onclick="window.print()">🖨️ Print</button></div>
+    <div class="report-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid var(--teal);flex-wrap:wrap;gap:12px;">
+        <div><div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--teal);">DentCare Pro</div><div style="font-size:12px;color:var(--text-2);">Dental Clinic & Management System</div></div>
+        <div style="text-align:right;"><div style="font-size:17px;font-weight:800;">Referral Letter</div><div style="font-size:12px;color:var(--text-2);">Generated: ${new Date(data.generatedAt).toLocaleDateString()}</div></div>
+      </div>
+      <p style="font-size:13px;margin-bottom:16px;">To whom it may concern,</p>
+      <p style="font-size:13px;margin-bottom:16px;line-height:1.6;">
+        We are referring our patient <strong>${esc(patient.full_name)}</strong> (Patient ID: ${esc(patient.patient_id)}, DOB: ${esc(patient.date_of_birth||'—')})
+        for further evaluation. ${patient.allergies ? `The patient has noted allergies: <strong style="color:var(--rose);">${esc(patient.allergies)}</strong>.` : ''}
+      </p>
+      <div style="margin-bottom:16px;"><strong style="font-size:13px;">Most recent visit:</strong>
+        <p style="font-size:13px;color:var(--text-2);margin-top:4px;">
+          ${latestVisit ? `${new Date(latestVisit.created_at).toLocaleDateString()} — ${esc(latestVisit.diagnosis||latestVisit.treatment_done||'No diagnosis recorded')} (seen by ${esc(latestVisit.doctor_name||'clinic staff')})` : 'No visit history on file.'}
+        </p></div>
+      <div style="margin-bottom:16px;"><strong style="font-size:13px;">Dental chart summary:</strong>
+        <p style="font-size:13px;color:var(--text-2);margin-top:4px;">${chartSummary}</p></div>
+      <div style="margin-bottom:26px;"><strong style="font-size:13px;">Current prescriptions:</strong>
+        <p style="font-size:13px;color:var(--text-2);margin-top:4px;">${rxSummary}</p></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:36px;padding-top:16px;border-top:1px solid #e2e8f0;">
+        <div style="text-align:center;"><div style="height:36px;"></div><div style="border-top:1.5px solid var(--text);padding-top:7px;font-size:12px;color:var(--text-2);">Referring Doctor Signature</div></div>
+        <div style="text-align:center;"><div style="height:36px;"></div><div style="border-top:1.5px solid var(--text);padding-top:7px;font-size:12px;color:var(--text-2);">Clinic Stamp & Date</div></div></div>
+      <div style="text-align:center;margin-top:18px;font-size:10px;color:var(--text-2);">This document is computer generated by DentCare Pro · Confidential Medical Record</div>
+    </div>`;
+}
 
 // =====================================================================
 // PRINTABLE REPORT CARD (live data)
 // =====================================================================
 async function renderReportCard(){
+  if (REPORT_MODE === 'referral') { await renderReferralLetter(); return; }
   const el = document.getElementById('page-report-card');
   const id = role() === 'patient' ? USER.patient_id : CURRENT_PATIENT_ID;
   if (!id) { el.innerHTML = `<div class="empty"><div class="ei">👤</div><h3>No patient selected</h3><p>Open a patient profile first.</p></div>`; return; }
