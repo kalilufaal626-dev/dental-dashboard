@@ -55,6 +55,7 @@ function showAppointmentDetails(id){
     <div class="fg"><strong>Status:</strong> <span class="badge ${statusBadge(appointment.status)}">${esc(appointment.status || 'N/A')}</span></div>
     ${appointment.notes ? `<div class="fg"><strong>Notes:</strong><div style="white-space:pre-wrap;">${esc(appointment.notes)}</div></div>` : '<div class="fg"><strong>Notes:</strong> —</div>'}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="closeModal('m-appt-details'); showPage('patient-profile', ${JSON.stringify(appointment.patient_id)} )">Open Patient</button>
       <button class="btn btn-outline" onclick="updateApptStatus(${appointment.id}, 'cancelled', { closeModal: true })">Cancel</button>
       <button class="btn btn-teal" onclick="updateApptStatus(${appointment.id}, 'completed', { closeModal: true })">Complete</button>
     </div>
