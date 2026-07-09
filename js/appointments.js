@@ -54,17 +54,24 @@ function showAppointmentDetails(id){
     <div class="fg"><strong>Time:</strong> ${esc(appointment.time ? appointment.time.slice(0,5) : 'N/A')}</div>
     <div class="fg"><strong>Status:</strong> <span class="badge ${statusBadge(appointment.status)}">${esc(appointment.status || 'N/A')}</span></div>
     ${appointment.notes ? `<div class="fg"><strong>Notes:</strong><div style="white-space:pre-wrap;">${esc(appointment.notes)}</div></div>` : '<div class="fg"><strong>Notes:</strong> —</div>'}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="updateApptStatus(${appointment.id}, 'cancelled', { closeModal: true })">Cancel</button>
+      <button class="btn btn-teal" onclick="updateApptStatus(${appointment.id}, 'completed', { closeModal: true })">Complete</button>
+    </div>
   `;
   openModal('m-appt-details');
 }
 
-async function updateApptStatus(id, status){
-  // This helper delegates to server; keep lightweight here.
+async function updateApptStatus(id, status, options = {}){
   try {
     if (!status) return;
     await api(`/appointments/${id}`, { method:'PATCH', body: JSON.stringify({ status }) });
+    if (options.closeModal) closeModal('m-appt-details');
+    if (document.getElementById('page-dashboard')?.classList.contains('active') && typeof renderDashboard === 'function') {
+      await renderDashboard();
+    }
+    await filterAppts();
     toast(`Appointment ${status.replace('_',' ')}.`, 's');
-    filterAppts();
   } catch(e){ toast(e.message,'e'); }
 }
 
