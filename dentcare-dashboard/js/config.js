@@ -4,12 +4,12 @@ const API_BASE = "https://dental-92vv.onrender.com";
 const APP_VERSION = '0.1.0';
 
 const ROLE_PERMISSIONS = {
-  admin: ['dashboard','patients','appointments','pharmacy','prescriptions','billing','reports','staff','settings','treatment-plans','xrays'],
-  dentist: ['dashboard','patients','appointments','dental-chart','medical-records','prescriptions','reports','settings','treatment-plans','xrays'],
-  receptionist: ['dashboard','patients','appointments','billing','reports','settings','treatment-plans','xrays'],
+  admin: ['dashboard','patients','appointments','pharmacy','prescriptions','billing','staff','settings','treatment-plans','xrays'],
+  dentist: ['dashboard','patients','appointments','dental-chart','medical-records','prescriptions','settings','treatment-plans','xrays'],
+  receptionist: ['dashboard','patients','appointments','billing','settings','treatment-plans','xrays'],
   pharmacist: ['dashboard','pharmacy','prescriptions','settings'],
   assistant: ['dashboard','patients','appointments','medical-records','settings','xrays'],
-  patient: ['patient-home','patient-appointments','patient-record','patient-billing','patient-reports','patient-treatment-plans','patient-xrays','settings']
+  patient: ['patient-home','patient-appointments','patient-record','patient-billing','patient-treatment-plans','patient-xrays','settings']
 };
 
 const NAV_CONFIG = [
@@ -23,7 +23,6 @@ const NAV_CONFIG = [
   {id:'pharmacy',label:'Pharmacy',icon:'🏥'},
   {id:'billing',label:'Billing',icon:'💳'},
   {id:'xrays',label:'X-Rays',icon:'🖼️'},
-  {id:'reports',label:'Reports',icon:'📄'},
   {id:'patient-treatment-plans',label:'My Treatment Plans',icon:'🩺'},
   {id:'patient-xrays',label:'My X-Rays',icon:'🖼️'},
   {id:'staff',label:'Staff',icon:'👥'},
@@ -39,7 +38,6 @@ const PAGE_TITLES = {
   'prescriptions':'Prescriptions',
   'pharmacy':'Pharmacy',
   'billing':'Billing',
-  'reports':'Reports',
   'staff':'Staff',
   'treatment-plans':'Treatment Plans',
   'xrays':'X-Rays',
@@ -49,8 +47,7 @@ const PAGE_TITLES = {
   'patient-home':'My Dashboard',
   'patient-appointments':'My Appointments',
   'patient-record':'My Record',
-  'patient-billing':'My Bills',
-  'patient-reports':'My Reports'
+  'patient-billing':'My Bills'
 };
 
 const STATUS_BADGES = {

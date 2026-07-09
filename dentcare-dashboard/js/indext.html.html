@@ -683,15 +683,98 @@ async function filterAppts(){
   const appts = await api(`/appointments${q?'?'+q:''}`);
   window.__APPOINTMENTS = appts;
   document.getElementById('appt-table').innerHTML = appts.length ? `
-    <table><thead><tr><th>Date</th><th>Time</th>${isPatient?'':'<th>Patient</th>'}<th>Treatment</th><th>Doctor</th><th>Status</th></tr></thead>
-    <tbody>${appts.map(a=>`<tr>
+    <table><thead><tr><th>Date</th><th>Time</th>${isPatient?'':'<th>Patient</th>'}<th>Treatment</th><th>Doctor</th><th>Status</th>${isPatient?'':'<th></th>'}</tr></thead>
+    <tbody>${appts.map(a=>`<tr onclick="showAppointmentDetails(${a.id})" style="cursor:pointer;">
       <td>${esc(a.date)}</td><td><strong>${esc(a.time.slice(0,5))}</strong></td>
       ${isPatient?'':`<td>${esc(a.patient_name)}</td>`}
       <td>${esc(a.treatment)}</td><td style="font-size:12px;color:var(--text-2);">${esc(a.doctor_name||'—')}</td>
       <td><span class="badge ${statusBadge(a.status)}">${esc(a.status)}</span></td>
+      ${isPatient?'':`<td><select class="search-input" style="padding:5px 8px;font-size:11px;" onchange="updateApptStatus(${a.id},this.value)">
+        <option value="">Set status…</option>${['scheduled','confirmed','in-progress','completed','cancelled','no_show'].map(s=>`<option value="${s}">${s}</option>`).join('')}
+      </select></td>`}
     </tr>`).join('')}</tbody></table>` : `<div class="empty"><div class="ei">📅</div><h3>No appointments found</h3></div>`;
 }
-
+async function updateApptStatus(id, status){
+  await setAppointmentStatus(id, status);
+}
+async function setAppointmentStatus(id, status, options = {}){
+  if (!status) return;
+  try {
+    await api(`/appointments/${id}`, { method:'PATCH', body: JSON.stringify({ status }) });
+    toast(`Appointment ${status.replace('_',' ')}.`, 's');
+    if (options.closeModal) closeModal('m-appt-details');
+    filterAppts();
+  } catch(e){ toast(e.message,'e'); }
+}
+function openAppointmentPatientProfile(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  const patientId = appointment ? appointment.patient_id : null;
+  if (!patientId) { toast('Patient data not available','e'); return; }
+  showPage('patient-profile', patientId);
+}
+function editAppointment(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  if (!appointment) { toast('Appointment not found','e'); return; }
+  openBookApptModal(appointment);
+}
+async function completeAppointment(id){
+  await setAppointmentStatus(id, 'completed', { closeModal: true });
+}
+async function cancelAppointment(id){
+  await setAppointmentStatus(id, 'cancelled', { closeModal: true });
+}
+function printAppointmentSlip(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  if (!appointment) { toast('Appointment not found','e'); return; }
+  const content = `
+    <html><head><title>Appointment Slip</title>
+      <style>body{font-family:Arial,sans-serif;padding:18px;}h1{font-size:20px;}p{margin:8px 0;} .label{font-weight:700;}</style>
+    </head><body>
+      <h1>Appointment Slip</h1>
+      <p><span class="label">Patient:</span> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</p>
+      <p><span class="label">Dentist:</span> ${esc(appointment.doctor_name || 'N/A')}</p>
+      <p><span class="label">Treatment:</span> ${esc(appointment.treatment || 'N/A')}</p>
+      <p><span class="label">Date:</span> ${esc(appointment.date || 'N/A')}</p>
+      <p><span class="label">Time:</span> ${esc(appointment.time || 'N/A')}</p>
+      <p><span class="label">Status:</span> ${esc(appointment.status || 'N/A')}</p>
+      ${appointment.notes ? `<p><span class="label">Notes:</span> ${esc(appointment.notes)}</p>` : ''}
+      <p style="margin-top:22px;font-size:12px;color:#666;">Generated from DentCare Pro</p>
+    </body></html>
+  `;
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) { toast('Unable to open print window','e'); return; }
+  printWindow.document.write(content);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+function showAppointmentDetails(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  if(!appointment){ toast('Appointment not found','e'); return; }
+  const html = `
+    <div class="modal-header"><h2>Appointment Details</h2><button class="modal-close" onclick="closeModal('m-appt-details')">✕</button></div>
+    <div class="fg"><strong>Patient:</strong> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</div>
+    <div class="fg"><strong>Dentist:</strong> ${esc(appointment.doctor_name || 'N/A')}</div>
+    <div class="fg"><strong>Treatment:</strong> ${esc(appointment.treatment || 'N/A')}</div>
+    <div class="fg"><strong>Date:</strong> ${esc(appointment.date || 'N/A')}</div>
+    <div class="fg"><strong>Time:</strong> ${esc(appointment.time || 'N/A')}</div>
+    <div class="fg"><strong>Status:</strong> ${esc(appointment.status || 'N/A')}</div>
+    ${appointment.notes ? `<div class="fg"><strong>Notes:</strong> ${esc(appointment.notes)}</div>` : ''}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="openAppointmentPatientProfile(${appointment.id})">Open Patient</button>
+      <button class="btn btn-outline" onclick="editAppointment(${appointment.id})">Edit</button>
+      <button class="btn btn-teal" onclick="completeAppointment(${appointment.id})">Complete</button>
+      <button class="btn btn-outline" onclick="cancelAppointment(${appointment.id})">Cancel</button>
+      <button class="btn btn-outline" onclick="printAppointmentSlip(${appointment.id})">Print Appointment</button>
+    </div>
+  `;
+  document.getElementById('m-appt-details-inner').innerHTML = html;
+  openModal('m-appt-details');
+}
 async function openBookApptModal(appointment = null){
   const isPatient = role() === 'patient';
   const editMode = !!appointment;

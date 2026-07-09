@@ -1,302 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DentCare Pro — Dental Clinic System</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-<style>
-:root{
-  --teal:#0d9488;--teal-dark:#0f766e;--teal-light:#ccfbf1;
-  --blue:#0ea5e9;--blue-light:#e0f2fe;--purple:#8b5cf6;--purple-light:#ede9fe;
-  --amber:#f59e0b;--amber-light:#fef3c7;--rose:#f43f5e;--rose-light:#ffe4e6;
-  --green:#22c55e;--green-light:#dcfce7;
-  --bg:#f0fdf9;--white:#fff;--text:#0f2027;--text-2:#64748b;--border:#d1fae5;
-  --sidebar:#0f2027;--sidebar-hover:#1a3040;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-.auth-wrap{min-height:100vh;display:flex;background:linear-gradient(135deg,#0f2027 0%,#134e4a 60%,#0d9488 100%);}
-.auth-left{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;}
-.auth-brand{text-align:center;}
-.logo-wrap{width:100px;height:100px;border-radius:28px;background:linear-gradient(135deg,#0d9488,#0ea5e9);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 20px 60px rgba(13,148,136,.4);}
-.auth-brand h1{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:6px;}
-.auth-brand .tagline{font-size:13px;color:rgba(255,255,255,.5);letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-bottom:40px;}
-.auth-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-.auth-stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px 14px;text-align:center;}
-.auth-stat .val{font-size:26px;font-weight:800;color:#2dd4bf;}
-.auth-stat .lbl{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;font-weight:500;}
-.auth-right{width:460px;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:60px 48px;}
-.auth-right .rl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;}
-.auth-right h2{font-size:26px;font-weight:800;color:var(--text);margin-bottom:4px;}
-.auth-right p{font-size:14px;color:var(--text-2);margin-bottom:28px;}
-.auth-err{background:var(--rose-light);color:#be123c;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px;display:none;}
-.fg{margin-bottom:15px;}
-.fg label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;}
-.fg input,.fg select,.fg textarea{width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;}
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--teal);}
-.btn{padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
-.btn-teal{background:var(--teal);color:#fff;}
-.btn-teal:hover{background:var(--teal-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(13,148,136,.3);}
-.btn-outline{background:#fff;border:1.5px solid #e2e8f0;color:var(--text);}
-.btn-outline:hover{border-color:var(--teal);color:var(--teal);}
-.btn-danger{background:var(--rose);color:#fff;}
-.btn-green{background:var(--green);color:#fff;}
-.btn-amber{background:var(--amber);color:#fff;}
-.btn-full{width:100%;justify-content:center;padding:13px;}
-.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;}
-.btn:disabled{opacity:.6;cursor:not-allowed;}
-#app{display:none;min-height:100vh;}
-.layout{display:flex;min-height:100vh;}
-.sidebar{width:252px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s;}
-.sb-brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
-.sb-logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sb-brand h2{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;line-height:1.1;}
-.sb-brand p{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px;}
-.sb-user{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:9px;}
-.sb-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;}
-.sb-uname{font-size:13px;font-weight:600;color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-.sb-urole{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:1px;}
-.online-dot{width:7px;height:7px;background:var(--green);border-radius:50%;border:2px solid var(--sidebar);margin-left:auto;flex-shrink:0;}
-.sb-nav{flex:1;padding:8px 0;overflow-y:auto;}
-.sb-sec{padding:10px 16px 4px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.2);}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:13px;font-weight:500;color:rgba(255,255,255,.55);cursor:pointer;transition:all .15s;border-left:3px solid transparent;}
-.nav-item:hover{background:var(--sidebar-hover);color:#fff;}
-.nav-item.active{background:rgba(13,148,136,.2);color:#fff;border-left-color:var(--teal);font-weight:600;}
-.nav-icon{font-size:15px;width:18px;text-align:center;}
-.nav-badge{margin-left:auto;background:var(--rose);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:100px;}
-.sb-footer{padding:12px;border-top:1px solid rgba(255,255,255,.06);}
-.main{flex:1;margin-left:252px;display:flex;flex-direction:column;}
-.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 26px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;border-top:3px solid;border-image:linear-gradient(90deg,var(--teal),var(--blue)) 1;}
-.topbar h1{font-size:17px;font-weight:700;}
-.topbar-right{display:flex;align-items:center;gap:10px;}
-.date-chip{font-size:12px;color:var(--text-2);font-weight:500;background:var(--bg);padding:5px 12px;border-radius:8px;border:1px solid var(--border);}
-.notif-btn{width:36px;height:36px;border-radius:10px;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;background:#fff;}
-.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--rose);border-radius:50%;border:1.5px solid #fff;}
-.content{padding:24px 26px;flex:1;}
-.page{display:none;}
-.page.active{display:block;}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
-.stat-card{background:#fff;border-radius:14px;padding:18px;border:1px solid #e2e8f0;position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;}
-.stat-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-2px);}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--sc,var(--teal));}
-.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px;background:var(--sb,var(--teal-light));}
-.stat-label{font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
-.stat-value{font-size:28px;font-weight:800;color:var(--text);line-height:1;margin-bottom:3px;}
-.stat-sub{font-size:12px;color:var(--text-2);}
-.card{background:#fff;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:18px;}
-.card-header{padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fafafa;flex-wrap:wrap;gap:8px;}
-.card-title{font-size:14px;font-weight:700;}
-.card-body{padding:16px;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th{padding:8px 13px;text-align:left;font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #f1f5f9;background:#fafafa;}
-td{padding:11px 13px;border-bottom:1px solid #f1f5f9;color:var(--text);vertical-align:middle;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:#f8fffe;}
-.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap;}
-.badge-teal{background:var(--teal-light);color:var(--teal-dark);}
-.badge-blue{background:var(--blue-light);color:#0369a1;}
-.badge-amber{background:var(--amber-light);color:#92400e;}
-.badge-rose{background:var(--rose-light);color:#be123c;}
-.badge-green{background:var(--green-light);color:#15803d;}
-.badge-gray{background:#f1f5f9;color:var(--text-2);}
-.badge-purple{background:var(--purple-light);color:#6d28d9;}
-.appt-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:11px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:12px;transition:all .2s;}
-.appt-time{width:60px;text-align:center;flex-shrink:0;border-right:2px solid var(--border);padding-right:12px;}
-.appt-time .t{font-size:14px;font-weight:800;color:var(--teal);}
-.appt-time .p{font-size:10px;color:var(--text-2);font-weight:600;}
-.appt-info{flex:1;min-width:0;}
-.appt-info h4{font-size:13px;font-weight:700;margin-bottom:1px;}
-.appt-info p{font-size:11px;color:var(--text-2);}
-.appt-info .doc{font-size:11px;color:var(--teal);font-weight:600;margin-top:2px;}
-.teeth-row{display:flex;justify-content:center;gap:3px;margin-bottom:3px;flex-wrap:wrap;}
-.tooth{width:32px;height:40px;border:2px solid #e2e8f0;border-radius:5px 5px 9px 9px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:#fff;font-size:8px;font-weight:700;color:var(--text-2);}
-.tooth:hover{border-color:var(--teal);transform:scale(1.06);}
-.tooth.healthy{background:#fff;border-color:#e2e8f0;}
-.tooth.cavity{background:#fef3c7;border-color:var(--amber);}
-.tooth.filling{background:#dbeafe;border-color:var(--blue);}
-.tooth.crown{background:var(--purple-light);border-color:var(--purple);}
-.tooth.extraction{background:#f1f5f9;border-color:#94a3b8;opacity:.5;}
-.tooth.root-canal{background:var(--rose-light);border-color:var(--rose);}
-.tooth.implant{background:var(--teal-light);border-color:var(--teal);}
-.tooth-num{font-size:7px;font-weight:700;color:var(--text-2);margin-top:1px;}
-.chart-divider{height:2px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:10px 0;}
-.jaw-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-2);margin-bottom:6px;text-align:center;}
-.tooth-legend{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;justify-content:center;}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-2);font-weight:500;}
-.legend-dot{width:10px;height:10px;border-radius:3px;}
-.tab-bar{display:flex;gap:3px;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:18px;flex-wrap:wrap;}
-.tab-btn{flex:1;min-width:110px;padding:8px 10px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text-2);background:transparent;transition:all .15s;}
-.tab-btn.active{background:#fff;color:var(--teal);box-shadow:0 1px 4px rgba(0,0,0,.1);}
-.progress-bar{background:#e2e8f0;border-radius:100px;height:6px;overflow:hidden;}
-.progress-fill{height:100%;border-radius:100px;transition:width .4s;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
-.modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:18px;padding:26px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.modal-header h2{font-size:17px;font-weight:800;}
-.modal-close{background:#f1f5f9;border:none;width:30px;height:30px;border-radius:7px;font-size:14px;cursor:pointer;color:var(--text-2);display:flex;align-items:center;justify-content:center;}
-.modal-close:hover{background:#e2e8f0;}
-.drug-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f5f9;}
-.drug-row:last-child{border-bottom:none;}
-.drug-name{font-size:13px;font-weight:600;}
-.drug-detail{font-size:11px;color:var(--text-2);margin-top:2px;}
-.stock-bar{width:80px;}
-.notif-panel{position:fixed;top:60px;right:0;width:320px;background:#fff;border-left:1px solid #e2e8f0;height:calc(100vh - 60px);z-index:90;transform:translateX(100%);transition:transform .3s;display:flex;flex-direction:column;}
-.notif-panel.open{transform:translateX(0);}
-.notif-item{padding:13px 15px;border-bottom:1px solid #f1f5f9;display:flex;gap:11px;}
-.notif-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.notif-item h4{font-size:13px;font-weight:600;margin-bottom:2px;}
-.notif-item p{font-size:12px;color:var(--text-2);}
-.patient-hero{background:linear-gradient(135deg,var(--teal-dark),var(--blue));border-radius:14px;padding:22px;margin-bottom:18px;display:flex;align-items:center;gap:18px;color:#fff;flex-wrap:wrap;}
-.patient-av{width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex-shrink:0;border:3px solid rgba(255,255,255,.3);}
-.patient-hero h2{font-size:20px;font-weight:800;margin-bottom:3px;}
-.patient-hero p{opacity:.7;font-size:13px;}
-.patient-meta{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
-.patient-meta span{font-size:12px;opacity:.8;}
-.report-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:36px;max-width:780px;margin:0 auto;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
-.search-input{padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;transition:border-color .2s;}
-.search-input:focus{border-color:var(--teal);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--text);font-size:22px;line-height:1;}
-.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
-.sb-overlay.open{display:block;}
-.empty{text-align:center;padding:36px 16px;color:var(--text-2);}
-.empty .ei{font-size:34px;margin-bottom:8px;}
-.notice{padding:11px 14px;border-radius:10px;font-size:12px;font-weight:600;margin-bottom:14px;}
-.notice-amber{background:var(--amber-light);color:#92400e;}
-.spinner{text-align:center;padding:36px;color:var(--text-2);font-size:13px;}
-.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:7px;}
-.toast{background:var(--sidebar);color:#fff;border-radius:11px;padding:10px 16px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:slideUp .3s ease;display:flex;align-items:center;gap:7px;}
-.toast.s{background:var(--green);}
-.toast.e{background:var(--rose);}
-@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media print{
-  .sidebar,.topbar,.sb-overlay,.toast-wrap,.notif-panel,.btn,.sec-hdr,.tab-bar,.stats-grid{display:none!important;}
-  .main{margin-left:0!important;}.content{padding:0!important;}.page{display:none!important;}
-  #page-report-card{display:block!important;}.report-card{border:none!important;max-width:100%!important;}
-  body{background:#fff!important;}
-}
-@media(max-width:900px){
-  .sidebar{transform:translateX(-100%);}
-  .sidebar.open{transform:translateX(0);}
-  .main{margin-left:0;}
-  .hamburger{display:flex;}
-  .stats-grid{grid-template-columns:1fr 1fr;gap:12px;}
-  .two-col,.three-col{grid-template-columns:1fr;}
-  .content{padding:14px;}
-  .topbar{padding:0 14px;}
-  .auth-wrap{flex-direction:column;}
-  .auth-left{display:none;}
-  .auth-right{width:100%;padding:36px 22px;}
-}
-@media(max-width:600px){ .stats-grid{grid-template-columns:1fr 1fr;} .stat-value{font-size:24px;} }
-</style>
-</head>
-<body>
-<div class="toast-wrap" id="toasts"></div>
 
-<!-- AUTH -->
-<div class="auth-wrap" id="auth-wrap">
-  <div class="auth-left">
-    <div class="auth-brand">
-      <div class="logo-wrap">
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <path d="M28 8C28 8 18 14 18 26C18 32 22 36 28 36C34 36 38 32 38 26C38 14 28 8Z" fill="white" opacity="0.92"/>
-          <path d="M28 36C28 36 20 38 20 44C20 47 23 48 28 48C33 48 36 47 36 44C36 38 28 36 28 36Z" fill="white" opacity="0.6"/>
-          <circle cx="28" cy="24" r="4" fill="#0d9488"/>
-        </svg>
-      </div>
-      <h1>DentCare Pro</h1>
-      <p class="tagline">Dental Clinic Management</p>
-      <div class="auth-stats">
-        <div class="auth-stat"><div class="val">Live</div><div class="lbl">Data</div></div>
-        <div class="auth-stat"><div class="val">API</div><div class="lbl">Connected</div></div>
-        <div class="auth-stat"><div class="val">24/7</div><div class="lbl">Access</div></div>
-      </div>
-    </div>
-  </div>
-  <div class="auth-right">
-    <div class="rl">Welcome back</div>
-    <h2>Sign in to DentCare</h2>
-    <p>Enter your email and password</p>
-    <form id="login-form" onsubmit="doLogin(); return false;">
-      <div class="auth-err" id="auth-err"></div>
-      <div class="fg"><label>Email</label><input type="email" id="li-email" placeholder="you@dentcarepro.gm"></div>
-      <div class="fg"><label>Password</label><input type="password" id="li-pass" placeholder="••••••••"></div>
-      <button type="submit" class="btn btn-teal btn-full" id="login-btn">Sign in →</button>
-    </form>
-    <button type="button" class="btn btn-outline btn-full" style="margin-top:10px;" onclick="openPatientSignup()">  Create Patient Account</button>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app">
-  <div class="layout">
-    <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
-    <aside class="sidebar" id="sidebar">
-      <div class="sb-brand">
-        <div class="sb-logo"><svg width="22" height="22" viewBox="0 0 56 56" fill="none"><path d="M28 8C28 8 18 14 18 26C18 32 22 36 28 36C34 36 38 32 38 26C38 14 28 8Z" fill="white" opacity="0.9"/><path d="M28 36C28 36 20 38 20 44C20 47 23 48 28 48C33 48 36 47 36 44C36 38 28 36 28 36Z" fill="white" opacity="0.6"/></svg></div>
-        <div><h2>DentCare Pro</h2><p>Dental Management</p></div>
-      </div>
-      <div class="sb-user">
-        <div class="sb-av" id="sb-av">A</div>
-        <div style="flex:1;min-width:0;"><div class="sb-uname" id="sb-name">—</div><div class="sb-urole" id="sb-role">—</div></div>
-        <div class="online-dot"></div>
-      </div>
-      <nav class="sb-nav" id="sb-nav"></nav>
-      <div class="sb-footer"><button class="btn btn-outline btn-full btn-sm" onclick="logout()">⬅ Sign out</button></div>
-    </aside>
-
-    <main class="main">
-      <div class="topbar">
-        <div style="display:flex;align-items:center;gap:10px;"><button class="hamburger" onclick="toggleSidebar()">☰</button><h1 id="page-title">Dashboard</h1></div>
-        <div class="topbar-right">
-          <span class="date-chip" id="today-date"></span>
-          <div class="notif-btn" onclick="toggleNotif()">🔔<div class="notif-dot" id="notif-dot" style="display:none;"></div></div>
-        </div>
-      </div>
-
-      <div class="notif-panel" id="notif-panel">
-        <div class="card-header" style="background:#fff;"><span class="card-title">🔔 Notifications</span><button class="modal-close" onclick="toggleNotif()">✕</button></div>
-        <div style="flex:1;overflow-y:auto;" id="notif-list"></div>
-      </div>
-
-      <div class="content">
-        <div class="page" id="page-dashboard"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-patient-home"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-appointments"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-patients"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-patient-profile"></div>
-        <div class="page" id="page-billing"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-pharmacy"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-prescriptions"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-staff"><div class="spinner">Loading…</div></div>
-        <div class="page" id="page-reports"></div>
-        <div class="page" id="page-report-card"></div>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- MODALS (content injected by JS) -->
-<div class="modal-overlay" id="m-book"><div class="modal" id="m-book-inner"></div></div>
-<div class="modal-overlay" id="m-appt-details"><div class="modal" id="m-appt-details-inner"></div></div>
-<div class="modal-overlay" id="m-add-patient"><div class="modal" id="m-add-patient-inner"></div></div>
-<div class="modal-overlay" id="m-invoice"><div class="modal" id="m-invoice-inner"></div></div>
-<div class="modal-overlay" id="m-pay"><div class="modal" id="m-pay-inner"></div></div>
-<div class="modal-overlay" id="m-tooth"><div class="modal" style="max-width:360px;" id="m-tooth-inner"></div></div>
-<div class="modal-overlay" id="m-add-staff"><div class="modal" id="m-add-staff-inner"></div></div>
-<div class="modal-overlay" id="m-add-drug"><div class="modal" id="m-add-drug-inner"></div></div>
-<div class="modal-overlay" id="m-write-rx"><div class="modal" id="m-write-rx-inner"></div></div>
-<div class="modal-overlay" id="m-add-record"><div class="modal" id="m-add-record-inner"></div></div>
-<div class="modal-overlay" id="m-add-xray"><div class="modal" id="m-add-xray-inner"></div></div>
-<div class="modal-overlay" id="m-patient-signup">  <div class="modal" id="m-patient-signup-inner"></div></div>
-
-<script>
 // =====================================================================
 // CONFIG / SESSION
 // =====================================================================
@@ -409,31 +111,25 @@ const PAGE_TITLES = {
 // AUTH
 // =====================================================================
 async function doLogin() {
-  const email = document.getElementById('li-email')?.value.trim() || '';
-  const password = document.getElementById('li-pass')?.value || '';
+  const email = document.getElementById('li-email').value.trim();
+  const password = document.getElementById('li-pass').value;
   const errEl = document.getElementById('auth-err');
   const btn = document.getElementById('login-btn');
-  if (errEl) errEl.style.display = 'none';
-  if (!email || !password) {
-    if (errEl) { errEl.textContent = 'Email and password required'; errEl.style.display='block'; }
-    return;
-  }
-  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Email and password required'; errEl.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
   try {
     const data = await api('/auth/login', { method:'POST', body: JSON.stringify({ email, password }) });
-    if (!data || !data.token || !data.user) throw new Error('Invalid login response');
     TOKEN = data.token; USER = data.user;
     localStorage.setItem('dc_token', TOKEN);
     localStorage.setItem('dc_user', JSON.stringify(USER));
     enterApp();
   } catch(e) {
-    console.error('Login error:', e);
-    if (errEl) { errEl.textContent = e.message || 'Login failed'; errEl.style.display = 'block'; }
+    errEl.textContent = e.message || 'Login failed'; errEl.style.display = 'block';
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Sign in →'; }
+    btn.disabled = false; btn.textContent = 'Sign in →';
   }
 }
-window.doLogin = doLogin;
 function logout(){
   TOKEN = null; USER = null;
   localStorage.removeItem('dc_token'); localStorage.removeItem('dc_user');
@@ -683,15 +379,98 @@ async function filterAppts(){
   const appts = await api(`/appointments${q?'?'+q:''}`);
   window.__APPOINTMENTS = appts;
   document.getElementById('appt-table').innerHTML = appts.length ? `
-    <table><thead><tr><th>Date</th><th>Time</th>${isPatient?'':'<th>Patient</th>'}<th>Treatment</th><th>Doctor</th><th>Status</th></tr></thead>
-    <tbody>${appts.map(a=>`<tr>
+    <table><thead><tr><th>Date</th><th>Time</th>${isPatient?'':'<th>Patient</th>'}<th>Treatment</th><th>Doctor</th><th>Status</th>${isPatient?'':'<th></th>'}</tr></thead>
+    <tbody>${appts.map(a=>`<tr onclick="showAppointmentDetails(${a.id})" style="cursor:pointer;">
       <td>${esc(a.date)}</td><td><strong>${esc(a.time.slice(0,5))}</strong></td>
       ${isPatient?'':`<td>${esc(a.patient_name)}</td>`}
       <td>${esc(a.treatment)}</td><td style="font-size:12px;color:var(--text-2);">${esc(a.doctor_name||'—')}</td>
       <td><span class="badge ${statusBadge(a.status)}">${esc(a.status)}</span></td>
+      ${isPatient?'':`<td><select class="search-input" style="padding:5px 8px;font-size:11px;" onchange="updateApptStatus(${a.id},this.value)">
+        <option value="">Set status…</option>${['scheduled','confirmed','in-progress','completed','cancelled','no_show'].map(s=>`<option value="${s}">${s}</option>`).join('')}
+      </select></td>`}
     </tr>`).join('')}</tbody></table>` : `<div class="empty"><div class="ei">📅</div><h3>No appointments found</h3></div>`;
 }
-
+async function updateApptStatus(id, status){
+  await setAppointmentStatus(id, status);
+}
+async function setAppointmentStatus(id, status, options = {}){
+  if (!status) return;
+  try {
+    await api(`/appointments/${id}`, { method:'PATCH', body: JSON.stringify({ status }) });
+    toast(`Appointment ${status.replace('_',' ')}.`, 's');
+    if (options.closeModal) closeModal('m-appt-details');
+    filterAppts();
+  } catch(e){ toast(e.message,'e'); }
+}
+function openAppointmentPatientProfile(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  const patientId = appointment ? appointment.patient_id : null;
+  if (!patientId) { toast('Patient data not available','e'); return; }
+  showPage('patient-profile', patientId);
+}
+function editAppointment(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  if (!appointment) { toast('Appointment not found','e'); return; }
+  openBookApptModal(appointment);
+}
+async function completeAppointment(id){
+  await setAppointmentStatus(id, 'completed', { closeModal: true });
+}
+async function cancelAppointment(id){
+  await setAppointmentStatus(id, 'cancelled', { closeModal: true });
+}
+function printAppointmentSlip(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  if (!appointment) { toast('Appointment not found','e'); return; }
+  const content = `
+    <html><head><title>Appointment Slip</title>
+      <style>body{font-family:Arial,sans-serif;padding:18px;}h1{font-size:20px;}p{margin:8px 0;} .label{font-weight:700;}</style>
+    </head><body>
+      <h1>Appointment Slip</h1>
+      <p><span class="label">Patient:</span> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</p>
+      <p><span class="label">Dentist:</span> ${esc(appointment.doctor_name || 'N/A')}</p>
+      <p><span class="label">Treatment:</span> ${esc(appointment.treatment || 'N/A')}</p>
+      <p><span class="label">Date:</span> ${esc(appointment.date || 'N/A')}</p>
+      <p><span class="label">Time:</span> ${esc(appointment.time || 'N/A')}</p>
+      <p><span class="label">Status:</span> ${esc(appointment.status || 'N/A')}</p>
+      ${appointment.notes ? `<p><span class="label">Notes:</span> ${esc(appointment.notes)}</p>` : ''}
+      <p style="margin-top:22px;font-size:12px;color:#666;">Generated from DentCare Pro</p>
+    </body></html>
+  `;
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) { toast('Unable to open print window','e'); return; }
+  printWindow.document.write(content);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+function showAppointmentDetails(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  if(!appointment){ toast('Appointment not found','e'); return; }
+  const html = `
+    <div class="modal-header"><h2>Appointment Details</h2><button class="modal-close" onclick="closeModal('m-appt-details')">✕</button></div>
+    <div class="fg"><strong>Patient:</strong> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</div>
+    <div class="fg"><strong>Dentist:</strong> ${esc(appointment.doctor_name || 'N/A')}</div>
+    <div class="fg"><strong>Treatment:</strong> ${esc(appointment.treatment || 'N/A')}</div>
+    <div class="fg"><strong>Date:</strong> ${esc(appointment.date || 'N/A')}</div>
+    <div class="fg"><strong>Time:</strong> ${esc(appointment.time || 'N/A')}</div>
+    <div class="fg"><strong>Status:</strong> ${esc(appointment.status || 'N/A')}</div>
+    ${appointment.notes ? `<div class="fg"><strong>Notes:</strong> ${esc(appointment.notes)}</div>` : ''}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="openAppointmentPatientProfile(${appointment.id})">Open Patient</button>
+      <button class="btn btn-outline" onclick="editAppointment(${appointment.id})">Edit</button>
+      <button class="btn btn-teal" onclick="completeAppointment(${appointment.id})">Complete</button>
+      <button class="btn btn-outline" onclick="cancelAppointment(${appointment.id})">Cancel</button>
+      <button class="btn btn-outline" onclick="printAppointmentSlip(${appointment.id})">Print Appointment</button>
+    </div>
+  `;
+  document.getElementById('m-appt-details-inner').innerHTML = html;
+  openModal('m-appt-details');
+}
 async function openBookApptModal(appointment = null){
   const isPatient = role() === 'patient';
   const editMode = !!appointment;
@@ -1345,6 +1124,3 @@ async function renderReportCard(){
       <div style="text-align:center;margin-top:18px;font-size:10px;color:var(--text-2);">This document is computer generated by DentCare Pro · Confidential Medical Record</div>
     </div>`;
 }
-</script>
-</body>
-</html>
