@@ -33,12 +33,29 @@ async function filterAppts(){
   window.__APPOINTMENTS = appts;
   document.getElementById('appt-table').innerHTML = appts.length ? `
     <table><thead><tr><th>Date</th><th>Time</th>${isPatient?'':'<th>Patient</th>'}<th>Treatment</th><th>Doctor</th><th>Status</th></tr></thead>
-    <tbody>${appts.map(a=>`<tr>
+    <tbody>${appts.map(a=>`<tr ${!isPatient ? `onclick="showAppointmentDetails(${a.id})" style="cursor:pointer;"` : ''}>
       <td>${esc(a.date)}</td><td><strong>${esc(a.time.slice(0,5))}</strong></td>
       ${isPatient?'':`<td>${esc(a.patient_name)}</td>`}
       <td>${esc(a.treatment)}</td><td style="font-size:12px;color:var(--text-2);">${esc(a.doctor_name||'—')}</td>
       <td><span class="badge ${statusBadge(a.status)}">${esc(a.status)}</span></td>
     </tr>`).join('')}</tbody></table>` : `<div class="empty"><div class="ei">📅</div><h3>No appointments found</h3></div>`;
+}
+
+function showAppointmentDetails(id){
+  const appts = window.__APPOINTMENTS || [];
+  const appointment = appts.find(a=>String(a.id) === String(id));
+  if (!appointment) { toast('Appointment not found','e'); return; }
+  document.getElementById('m-appt-details-inner').innerHTML = `
+    <div class="modal-header"><h2>Appointment Details</h2><button class="modal-close" onclick="closeModal('m-appt-details')">✕</button></div>
+    <div class="fg"><strong>Patient:</strong> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</div>
+    <div class="fg"><strong>Dentist:</strong> ${esc(appointment.doctor_name || 'N/A')}</div>
+    <div class="fg"><strong>Treatment:</strong> ${esc(appointment.treatment || 'N/A')}</div>
+    <div class="fg"><strong>Date:</strong> ${esc(appointment.date || 'N/A')}</div>
+    <div class="fg"><strong>Time:</strong> ${esc(appointment.time ? appointment.time.slice(0,5) : 'N/A')}</div>
+    <div class="fg"><strong>Status:</strong> <span class="badge ${statusBadge(appointment.status)}">${esc(appointment.status || 'N/A')}</span></div>
+    ${appointment.notes ? `<div class="fg"><strong>Notes:</strong><div style="white-space:pre-wrap;">${esc(appointment.notes)}</div></div>` : '<div class="fg"><strong>Notes:</strong> —</div>'}
+  `;
+  openModal('m-appt-details');
 }
 
 async function updateApptStatus(id, status){
