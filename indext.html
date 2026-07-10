@@ -444,13 +444,26 @@ function logout(){
 function enterApp(){
   document.getElementById('auth-wrap').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+
+  window.APP_STATE = window.APP_STATE || {};
+  window.APP_STATE.user = USER;
+
   document.getElementById('sb-name').textContent = USER.full_name;
   document.getElementById('sb-role').textContent = USER.role;
-  document.getElementById('sb-av').textContent = (USER.full_name||'U').charAt(0).toUpperCase();
-  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('sb-av').textContent =
+    (USER.full_name || 'U').charAt(0).toUpperCase();
+
+  document.getElementById('today-date').textContent =
+    new Date().toLocaleDateString('en-GB', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
   buildNav();
   buildNotifications();
-  showPage(role() === 'patient' ? 'patient-home' : 'dashboard');
+  showPage(role()==='patient' ? 'patient-home' : 'dashboard');
 }
 if (TOKEN && USER) enterApp();
 
@@ -727,26 +740,112 @@ async function renderProfile(){
         <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;" onclick="REPORT_MODE='card';showPage('report-card')">🖨️ Report Card</button>
       </div></div>
     <div class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab(this,'tab-chart')">🦷 Dental Chart</button>
-      <button class="tab-btn" onclick="switchTab(this,'tab-records')">📋 Records</button>
-      <button class="tab-btn" onclick="switchTab(this,'tab-xray')">🩻 X-Rays</button>
-      <button class="tab-btn" onclick="switchTab(this,'tab-rx')">💊 Prescriptions</button>
-    </div>
-    <div id="tab-chart" class="tab-content"><div class="spinner">Loading…</div></div>
-    <div id="tab-records" class="tab-content" style="display:none;"><div class="spinner">Loading…</div></div>
-    <div id="tab-xray" class="tab-content" style="display:none;"><div class="spinner">Loading…</div></div>
-    <div id="tab-rx" class="tab-content" style="display:none;"><div class="spinner">Loading…</div></div>`;
+  <button class="tab-btn active" onclick="switchTab(this,'tab-chart')">
+    🦷 Dental Chart
+  </button>
+
+  <button class="tab-btn" onclick="switchTab(this,'tab-records')">
+    📋 Records
+  </button>
+
+  <button
+    class="tab-btn"
+    onclick="openPatientTreatmentPlansTab(this)"
+  >
+    📑 Treatment Plans
+  </button>
+
+  <button class="tab-btn" onclick="switchTab(this,'tab-xray')">
+    🩻 X-Rays
+  </button>
+
+  <button class="tab-btn" onclick="switchTab(this,'tab-rx')">
+    💊 Prescriptions
+  </button>
+</div>
+   <div id="tab-chart" class="tab-content">
+  <div class="spinner">Loading…</div>
+</div>
+
+<div id="tab-records" class="tab-content" style="display:none;">
+  <div class="spinner">Loading…</div>
+</div>
+
+<div id="tab-treatment-plans" class="tab-content" style="display:none;">
+  <div class="spinner">Loading treatment plans…</div>
+</div>
+
+<div id="tab-xray" class="tab-content" style="display:none;">
+  <div class="spinner">Loading…</div>
+</div>
+
+<div id="tab-rx" class="tab-content" style="display:none;">
+  <div class="spinner">Loading…</div>
+</div>
+`;
+
   const [chart, records, xrays, rx] = await Promise.all([
-    api(`/patients/${id}/chart`), api(`/patients/${id}/records`), api(`/patients/${id}/xrays`), api(`/prescriptions?patient_id=${id}`)
+    api(`/patients/${id}/chart`),
+    api(`/patients/${id}/records`),
+    api(`/patients/${id}/xrays`),
+    api(`/prescriptions?patient_id=${id}`)
   ]);
-  fillChartTab(chart); fillRecordsTab(records); fillXrayTab(xrays); fillRxTab(rx);
+
+  fillChartTab(chart);
+  fillRecordsTab(records);
+  fillXrayTab(xrays);
+  fillRxTab(rx);
 }
 function switchTab(btn, tabId){
   const bar = btn.closest('.tab-bar');
-  bar.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
-  bar.parentElement.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
-  document.getElementById(tabId).style.display='block';
+
+  bar.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+
+  btn.classList.add('active');
+
+  bar.parentElement.querySelectorAll('.tab-content').forEach(t => {
+    t.style.display = 'none';
+  });
+
+  const selectedTab = document.getElementById(tabId);
+
+  if (selectedTab) {
+    selectedTab.style.display = 'block';
+  }
 }
+
+async function openPatientTreatmentPlansTab(button) {
+  switchTab(button, 'tab-treatment-plans');
+
+  const container = document.getElementById('tab-treatment-plans');
+
+  if (!container) {
+    toast('Treatment Plans container not found', 'e');
+    return;
+  }
+
+  container.innerHTML =
+    '<div class="spinner">Loading treatment plans…</div>';
+
+  if (typeof renderPatientTreatmentPlans !== 'function') {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="ei">📑</div>
+        <h3>Treatment Plans unavailable</h3>
+        <p>Make sure treatment-plans.js is loaded.</p>
+      </div>
+    `;
+    return;
+  }
+
+  await renderPatientTreatmentPlans(
+    CURRENT_PATIENT_ID,
+    'tab-treatment-plans'
+  );
+}
+
 function toothIcon(c){ return {healthy:'⬜',cavity:'🟡',filling:'🔵',crown:'🟣','root-canal':'🔴',implant:'🟢',extraction:'✖'}[c]||'⬜'; }
 let CHART_MAP = {};
 function fillChartTab(rows){
@@ -1246,5 +1345,7 @@ async function renderReportCard(){
     </div>`;
 }
 </script>
+
+<script src="dentcare-dashboard/js/treatment-plans.js"></script>
 </body>
 </html>

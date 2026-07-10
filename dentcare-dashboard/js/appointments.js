@@ -1,60 +1,6 @@
-// Appointments listing and booking
-window.addEventListener('navigate', async (e)=>{
-  if(e.detail.page !== 'appointments') return;
-  await renderAppointments();
-});
-
-async function renderAppointments(){
-  const container = el('#content'); clear(container);
-  container.appendChild(create('h2',{},['Appointments']));
-
-  const viewControls = create('div',{class:'view-controls',style:'display:flex;gap:8px;margin-bottom:16px;'},[]);
-  const listButton = create('button',{class:'tab-btn active'},['List View']);
-  const calendarButton = create('button',{class:'tab-btn'},['Calendar View']);
-  viewControls.appendChild(listButton);
-  viewControls.appendChild(calendarButton);
-  container.appendChild(viewControls);
-
-  const btn = create('button',{},['Book Appointment']);
-  btn.addEventListener('click', ()=> showAppointmentForm());
-  container.appendChild(btn);
-
-  const listWrapper = create('div',{id:'appointment-list',style:'margin-top:16px;'},[]);
-  const calendarWrapper = create('div',{id:'appointment-calendar',style:'display:none;margin-top:16px;'},[]);
-  container.appendChild(listWrapper);
-  container.appendChild(calendarWrapper);
-
-  listButton.addEventListener('click', ()=>{
-    listWrapper.style.display = 'block';
-    calendarWrapper.style.display = 'none';
-    listButton.classList.add('active');
-    calendarButton.classList.remove('active');
-  });
-
-  calendarButton.addEventListener('click', ()=>{
-    listWrapper.style.display = 'none';
-    calendarWrapper.style.display = 'block';
-    listButton.classList.remove('active');
-    calendarButton.classList.add('active');
-  });
-
-  try{
-    const data = await api('/appointments');
-    if((data||[]).length===0) listWrapper.appendChild(create('div',{},['No records available yet.']));
-    (data||[]).forEach(a=>{
-      const node = create('div',{class:'card'},[]);
-      node.appendChild(create('div',{},[`${formatDate(a.date)} — ${a.patient_name || a.patient_id || ''} — ${a.status || ''}`]));
-      const role = window.APP_STATE && window.APP_STATE.user && window.APP_STATE.user.role;
-      if(role && role !== 'patient'){
-        node.style.cursor = 'pointer';
-        node.addEventListener('click', ()=> showAppointmentDetails(a));
-      }
-      listWrapper.appendChild(node);
-    });
-  }catch(e){ listWrapper.appendChild(create('div',{},['Failed to load appointments'])) }
-}
-
 function showAppointmentDetails(appointment){
+  window.__PRINT_APPOINTMENT = appointment;
+
   const html = `
     <div class="modal-details">
       <div><strong>Patient:</strong> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</div>
@@ -64,60 +10,59 @@ function showAppointmentDetails(appointment){
       <div><strong>Time:</strong> ${esc(appointment.time || 'N/A')}</div>
       <div><strong>Status:</strong> ${esc(appointment.status || 'N/A')}</div>
       ${appointment.notes ? `<div><strong>Notes:</strong> ${esc(appointment.notes)}</div>` : ''}
-    </div>
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+  <button type="button" onclick="openAppointmentPatient()">Open Patient</button>
+  <button type="button" onclick="editAppointment()">Edit</button>
+  <button type="button" onclick="cancelAppointment()">Cancel</button>
+  <button type="button" onclick="completeAppointment()">Complete</button>
+  <button type="button" onclick="printAppointmentSlip()">Print Slip</button>
+</div>v>
   `;
   showModal(html, 'Appointment Details');
 }
 
-function showAppointmentForm(){
+function printAppointmentSlip(){
+  const appointment = window.__PRINT_APPOINTMENT;
+  if(!appointment){
+    showToast('No appointment selected');
+    return;
+  }
+
   const html = `
-    <form id="appt-form">
-      <label>Patient ID<input name="patient_id" required></label>
-      <label>Date<input type="datetime-local" name="date" required></label>
-      <label>Dentist<select name="doctor_id" required><option value="">Loading dentists...</option></select></label>
-      <div><button type="submit">Book</button></div>
-    </form>
+    <!doctype html>
+    <html>
+    <head>
+      <title>Appointment Slip</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        h2 { text-align: center; margin-bottom: 5px; }
+        .sub { text-align: center; margin-bottom: 25px; color: #555; }
+        .row { margin: 10px 0; font-size: 15px; }
+        .label { font-weight: bold; }
+        .footer { margin-top: 35px; font-size: 12px; color: #666; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <h2>DentCare Pro</h2>
+      <div class="sub">Appointment Slip</div>
+
+      <div class="row"><span class="label">Patient:</span> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</div>
+      <div class="row"><span class="label">Dentist:</span> ${esc(appointment.doctor_name || 'N/A')}</div>
+      <div class="row"><span class="label">Treatment:</span> ${esc(appointment.treatment || 'N/A')}</div>
+      <div class="row"><span class="label">Date:</span> ${esc(appointment.date || 'N/A')}</div>
+      <div class="row"><span class="label">Time:</span> ${esc(appointment.time || 'N/A')}</div>
+      <div class="row"><span class="label">Status:</span> ${esc(appointment.status || 'N/A')}</div>
+      ${appointment.notes ? `<div class="row"><span class="label">Notes:</span> ${esc(appointment.notes)}</div>` : ''}
+
+      <div class="footer">Generated by DentCare Pro</div>
+    </body>
+    </html>
   `;
-  showModal(html, 'Book Appointment');
 
-  api('/dentists').then(dentists=>{
-    const sel = document.querySelector('#appt-form select[name="doctor_id"]');
-
-    if(!dentists || dentists.length === 0){
-      sel.innerHTML = '<option value="">No dentists available</option>';
-      return;
-    }
-
-    sel.innerHTML = '<option value="">Select dentist</option>';
-
-    dentists.forEach(d=>{
-      const label = d.specialization
-        ? `${d.full_name} — ${d.specialization}`
-        : d.full_name;
-
-      sel.appendChild(create('option',{value:d.id},[label]));
-    });
-  }).catch(()=>{
-    const sel = document.querySelector('#appt-form select[name="doctor_id"]');
-    sel.innerHTML = '<option value="">Could not load dentists</option>';
-  });
-
-  document.querySelector('#appt-form').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const payload = {
-      patient_id: fd.get('patient_id'),
-      date: fd.get('date'),
-      doctor_id: fd.get('doctor_id')
-    };
-
-    try{
-      await api('/appointments',{method:'POST', body:payload});
-      closeModal();
-      showToast('Appointment booked');
-      renderAppointments();
-    }catch(err){
-      showToast(err.message || 'Failed to book');
-    }
-  });
+  const win = window.open('', '_blank', 'width=600,height=700');
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
 }

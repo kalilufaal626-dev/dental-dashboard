@@ -1,48 +1,54 @@
 // Dashboard rendering
-window.addEventListener('navigate', async (e)=>{
-  if(e.detail.page !== 'dashboard') return;
+window.addEventListener('navigate', async (e) => {
+  if (e.detail.page !== 'dashboard') return;
   await renderDashboard();
 });
 
-async function renderDashboard(){
+async function renderDashboard() {
   const container = el('#content');
   clear(container);
-  const user = window.APP_STATE.user || {};
-  const wrap = create('div',{},[]);
-  const title = create('h2',{},[PAGE_TITLES['dashboard'] || 'Dashboard']);
-  wrap.appendChild(title);
 
-  // Try /stats for admin
-  try{
-    const stats = await api('/stats');
-    const statsCard = create('div',{class:'card'},[create('pre',{html:JSON.stringify(stats,null,2)})]);
-    wrap.appendChild(statsCard);
-  }catch(err){
-    // non-admin may not access /stats — show role-based overview
-    const appts = create('div',{class:'card',html:'<strong>Today\'s appointments</strong>'});
-    wrap.appendChild(appts);
-    // attempt to fetch appointments
-    try{
-      const data = await api('/appointments');
-      const list = create('div',{},[]);
-      (data || []).slice(0,10).forEach(a=>{
-        list.appendChild(create('div',{},[`${a.time || a.date || ''} — ${a.patient_name || a.patient_id || a.id}`]));
-      });
-      appts.appendChild(list);
-    }catch(err){ appts.appendChild(create('div',{},['No appointments available'])) }
+  const user = window.APP_STATE.user || {};
+  const wrap = create('div', {}, []);
+  wrap.appendChild(create('h2', {}, [PAGE_TITLES['dashboard'] || 'Dashboard']));
+
+  // Admin-only stats
+  if (user.role === 'admin') {
+    try {
+      const stats = await api('/stats');
+      wrap.appendChild(create('div', { class: 'card' }, [
+        create('h3', {}, ['Admin Stats']),
+        create('pre', {}, [JSON.stringify(stats, null, 2)])
+      ]));
+    } catch (err) {
+      wrap.appendChild(create('div', { class: 'card' }, ['Could not load admin stats']));
+    }
   }
 
-  try{
-    const xrays = await fetchAllXRays();
-    const recent = (xrays||[]).slice(0,3);
-    const xcard = create('div',{class:'card'},['Recent X-Rays']);
-    if(!recent.length) xcard.appendChild(create('div',{},['No X-rays available']));
-    recent.forEach(x=>{
-      const line = create('div',{},[`${x.patient_id || x.patient_name || 'Patient'} — ${formatXRayDate(x.taken_date||x.created_at)} `]);
-      if(x.image) line.appendChild(create('img',{src:getXRayImageSrc(x),style:'width:48px;height:48px;object-fit:cover;margin-left:8px;'}));
-      xcard.appendChild(line);
-    });
-    wrap.appendChild(xcard);
-  }catch(e){ }
+  // Safe dashboard for all staff roles
+  const apptsCard = create('div', { class: 'card' }, [
+    create('h3', {}, [`Today's Appointments`])
+  ]);
+
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const data = await api(`/appointments?date=${today}`);
+
+    if (!data || data.length === 0) {
+      apptsCard.appendChild(create('div', {}, ['No appointments today']));
+    } else {
+      const list = create('div', {}, []);
+      data.slice(0, 10).forEach(a => {
+        list.appendChild(create('div', {}, [
+          `${a.time || ''} — ${a.patient_name || a.patient_id || 'Patient'} — ${a.treatment || ''} — ${a.status || ''}`
+        ]));
+      });
+      apptsCard.appendChild(list);
+    }
+  } catch (err) {
+    apptsCard.appendChild(create('div', {}, ['No appointments available']));
+  }
+
+  wrap.appendChild(apptsCard);
   container.appendChild(wrap);
 }
