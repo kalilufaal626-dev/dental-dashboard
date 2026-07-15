@@ -31,6 +31,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .auth-right h2{font-size:26px;font-weight:800;color:var(--text);margin-bottom:4px;}
 .auth-right p{font-size:14px;color:var(--text-2);margin-bottom:28px;}
 .auth-err{background:var(--rose-light);color:#be123c;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px;display:none;}
+.demo-cred-btn{transition:border-color .15s,background .15s;}
+.demo-cred-btn:hover{border-color:var(--teal)!important;background:var(--teal-light)!important;}
+.pending-rx-card:hover{border-color:var(--teal)!important;background:var(--teal-light);}
 .fg{margin-bottom:15px;}
 .fg label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;}
 .fg input,.fg select,.fg textarea{width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;}
@@ -230,6 +233,47 @@ tr:hover td{background:#f8fffe;}
       <button type="submit" class="btn btn-teal btn-full" id="login-btn">Sign in →</button>
     </form>
     <button type="button" class="btn btn-outline btn-full" style="margin-top:10px;" onclick="openPatientSignup()">  Create Patient Account</button>
+
+    <div style="margin-top:22px;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:12px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:8px;">Demo Accounts — tap to fill</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button type="button" class="demo-cred-btn" onclick="fillDemoLogin('admin@dentcare.com','demo123')" style="display:flex;justify-content:space-between;align-items:center;width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="display:flex;flex-direction:column;">
+            <span style="font-size:12.5px;color:var(--text);font-weight:600;">admin@dentcare.com</span>
+            <span style="font-size:10px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Admin</span>
+          </span>
+          <span style="font-size:11px;color:var(--text-2);">demo123</span>
+        </button>
+        <button type="button" class="demo-cred-btn" onclick="fillDemoLogin('ebrima@demo.com','demo1234')" style="display:flex;justify-content:space-between;align-items:center;width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="display:flex;flex-direction:column;">
+            <span style="font-size:12.5px;color:var(--text);font-weight:600;">ebrima@demo.com</span>
+            <span style="font-size:10px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Dentist</span>
+          </span>
+          <span style="font-size:11px;color:var(--text-2);">demo1234</span>
+        </button>
+        <button type="button" class="demo-cred-btn" onclick="fillDemoLogin('marie@demo.com','demo1234')" style="display:flex;justify-content:space-between;align-items:center;width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="display:flex;flex-direction:column;">
+            <span style="font-size:12.5px;color:var(--text);font-weight:600;">marie@demo.com</span>
+            <span style="font-size:10px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Receptionist</span>
+          </span>
+          <span style="font-size:11px;color:var(--text-2);">demo1234</span>
+        </button>
+        <button type="button" class="demo-cred-btn" onclick="fillDemoLogin('amadou@demo.com','demo1234')" style="display:flex;justify-content:space-between;align-items:center;width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="display:flex;flex-direction:column;">
+            <span style="font-size:12.5px;color:var(--text);font-weight:600;">amadou@demo.com</span>
+            <span style="font-size:10px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Pharmacist</span>
+          </span>
+          <span style="font-size:11px;color:var(--text-2);">demo1234</span>
+        </button>
+        <button type="button" class="demo-cred-btn" onclick="fillDemoLogin('awa@gmail.com','demo1234')" style="display:flex;justify-content:space-between;align-items:center;width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;cursor:pointer;font-family:inherit;text-align:left;">
+          <span style="display:flex;flex-direction:column;">
+            <span style="font-size:12.5px;color:var(--text);font-weight:600;">awa@gmail.com</span>
+            <span style="font-size:10px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Patient</span>
+          </span>
+          <span style="font-size:11px;color:var(--text-2);">demo1234</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -295,6 +339,7 @@ tr:hover td{background:#f8fffe;}
 <div class="modal-overlay" id="m-add-record"><div class="modal" id="m-add-record-inner"></div></div>
 <div class="modal-overlay" id="m-add-xray"><div class="modal" id="m-add-xray-inner"></div></div>
 <div class="modal-overlay" id="m-patient-signup">  <div class="modal" id="m-patient-signup-inner"></div></div>
+<div class="modal-overlay" id="m-rx-details"><div class="modal" id="m-rx-details-inner"></div></div>
 
 <script src="js/appointments.js"></script>
 <script>
@@ -339,8 +384,8 @@ const PERMISSIONS = {
     actions:['book-appt','add-patient','update-tooth','create-invoice','pay-invoice','add-drug','add-staff','write-rx','dispense-rx','add-record','add-xray']
   },
   dentist: {
-    pages:['dashboard','appointments','patients','patient-profile','prescriptions','reports','report-card'],
-    actions:['book-appt','add-patient','update-tooth','write-rx','add-record','add-xray']
+    pages:['dashboard','appointments','patients','patient-profile','prescriptions'],
+    actions:['add-patient','update-tooth','write-rx','add-record','add-xray']
   },
   receptionist: {
     pages:['dashboard','appointments','patients','patient-profile','billing','reports','report-card'],
@@ -350,7 +395,7 @@ const PERMISSIONS = {
     pages:['dashboard','pharmacy','prescriptions'],
     actions:['add-drug','dispense-rx']
   },
-  nurse: {
+  assistant: {
     pages:['dashboard','appointments','patients','patient-profile'],
     actions:['add-record']
   },
@@ -362,6 +407,7 @@ const PERMISSIONS = {
 function role(){ return USER ? USER.role : null; }
 function canAccessPage(page){ return !!(PERMISSIONS[role()] && PERMISSIONS[role()].pages.includes(page)); }
 function canDo(action){ return !!(PERMISSIONS[role()] && PERMISSIONS[role()].actions.includes(action)); }
+const ROLE_DISPLAY = { assistant: 'Nurse' };
 
 // =====================================================================
 // NAV CONFIG
@@ -379,7 +425,7 @@ const NAV_CFG = {
   dentist:[
     {s:'My Patients'},{id:'dashboard',icon:'📊',lbl:'Dashboard'},
     {id:'appointments',icon:'📅',lbl:'Appointments'},{id:'patients',icon:'👤',lbl:'Patients'},
-    {id:'prescriptions',icon:'💊',lbl:'Prescriptions'},{id:'reports',icon:'🖨️',lbl:'Reports'},
+    {id:'prescriptions',icon:'💊',lbl:'Prescriptions'},
   ],
   receptionist:[
     {s:'Front Desk'},{id:'dashboard',icon:'📊',lbl:'Dashboard'},
@@ -390,7 +436,7 @@ const NAV_CFG = {
     {s:'Pharmacy'},{id:'dashboard',icon:'📊',lbl:'Dashboard'},
     {id:'pharmacy',icon:'🏪',lbl:'Drug Inventory'},{id:'prescriptions',icon:'💊',lbl:'Prescriptions'},
   ],
-  nurse:[
+  assistant:[
     {s:'Care'},{id:'dashboard',icon:'📊',lbl:'Dashboard'},
     {id:'appointments',icon:'📅',lbl:'Appointments'},{id:'patients',icon:'👤',lbl:'Patients'},
   ],
@@ -409,6 +455,15 @@ const PAGE_TITLES = {
 // =====================================================================
 // AUTH
 // =====================================================================
+function fillDemoLogin(email, password){
+  const emailEl = document.getElementById('li-email');
+  const passEl = document.getElementById('li-pass');
+  if (emailEl) emailEl.value = email;
+  if (passEl) passEl.value = password;
+  doLogin();
+}
+window.fillDemoLogin = fillDemoLogin;
+
 async function doLogin() {
   const email = document.getElementById('li-email')?.value.trim() || '';
   const password = document.getElementById('li-pass')?.value || '';
@@ -449,7 +504,7 @@ function enterApp(){
   window.APP_STATE.user = USER;
 
   document.getElementById('sb-name').textContent = USER.full_name;
-  document.getElementById('sb-role').textContent = USER.role;
+  document.getElementById('sb-role').textContent = ROLE_DISPLAY[USER.role] || USER.role;
   document.getElementById('sb-av').textContent =
     (USER.full_name || 'U').charAt(0).toUpperCase();
 
@@ -737,7 +792,7 @@ async function renderProfile(){
         </div></div>
       <div style="display:flex;gap:8px;">
         ${canDo('book-appt')?`<button class="btn btn-teal btn-sm" onclick="openBookApptModal()">📅 Book</button>`:''}
-        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;" onclick="REPORT_MODE='card';showPage('report-card')">🖨️ Report Card</button>
+        ${canAccessPage('report-card')?`<button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;" onclick="REPORT_MODE='card';showPage('report-card')">🖨️ Report Card</button>`:''}
       </div></div>
     <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab(this,'tab-chart')">
@@ -980,7 +1035,9 @@ async function submitRx(){
 }
 async function dispenseRx(id){
   try { await api(`/prescriptions/${id}/dispense`, { method:'PATCH' }); toast('Dispensed ✓','s');
-    if (document.getElementById('page-patient-profile').classList.contains('active')) fillRxTab(await api(`/prescriptions?patient_id=${CURRENT_PATIENT_ID}`));
+    if (document.getElementById('page-patient-profile')?.classList.contains('active')) fillRxTab(await api(`/prescriptions?patient_id=${CURRENT_PATIENT_ID}`));
+    else if (document.getElementById('page-pharmacy')?.classList.contains('active')) await renderPharmacy(document.getElementById('ph-low')?.checked || false);
+    else if (document.getElementById('page-prescriptions')?.classList.contains('active')) await filterRx();
     else await renderPrescriptions();
   } catch(e){ toast(e.message,'e'); }
 }
@@ -997,12 +1054,13 @@ async function renderPrescriptions(){
 async function filterRx(){
   const status = document.getElementById('rx-status-f')?.value || '';
   const rows = await api(`/prescriptions${status?'?status='+status:''}`);
+  window.__RX_CACHE = window.__RX_CACHE || {};
+  rows.forEach(r => window.__RX_CACHE[r.id] = r);
   document.getElementById('rx-table').innerHTML = rows.length ? `
-    <table><thead><tr><th>Date</th><th>Patient</th><th>Drug</th><th>Dosage</th><th>Freq</th><th>Duration</th><th>Doctor</th><th>Status</th>${canDo('dispense-rx')?'<th></th>':''}</tr></thead>
-    <tbody>${rows.map(r=>`<tr><td style="font-size:12px;color:var(--text-2);">${new Date(r.created_at).toLocaleDateString()}</td>
+    <table><thead><tr><th>Date</th><th>Patient</th><th>Drug</th><th>Dosage</th><th>Freq</th><th>Duration</th><th>Doctor</th><th>Status</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr onclick="showRxDetails(${r.id})" style="cursor:pointer;"><td style="font-size:12px;color:var(--text-2);">${new Date(r.created_at).toLocaleDateString()}</td>
       <td><strong>${esc(r.patient_name)}</strong></td><td>${esc(r.drug_name)}</td><td>${esc(r.dosage)}</td><td>${esc(r.frequency)}</td><td>${esc(r.duration)}</td>
-      <td style="font-size:12px;color:var(--text-2);">${esc(r.doctor_name||'—')}</td><td><span class="badge ${statusBadge(r.status)}">${esc(r.status)}</span></td>
-      ${canDo('dispense-rx')?`<td>${r.status==='pending'?`<button class="btn btn-green btn-sm" onclick="dispenseRx(${r.id})">Dispense</button>`:''}</td>`:''}</tr>`).join('')}</tbody></table>`
+      <td style="font-size:12px;color:var(--text-2);">${esc(r.doctor_name||'—')}</td><td><span class="badge ${statusBadge(r.status)}">${esc(r.status)}</span></td></tr>`).join('')}</tbody></table>`
     : `<div class="empty"><div class="ei">💊</div><h3>No prescriptions found</h3></div>`;
 }
 
@@ -1134,15 +1192,43 @@ async function renderPharmacy(lowOnly=false){
       ${canDo('add-drug')?`<td><button class="btn btn-outline btn-sm" onclick="openEditDrugModal(${d.id},${d.stock},${d.price||0})">Update</button></td>`:''}
     </tr>`;}).join('')}</tbody></table>` : `<div class="empty"><div class="ei">💊</div><h3>No drugs found</h3></div>`;
   const pending = await api('/prescriptions?status=pending');
+  window.__RX_CACHE = window.__RX_CACHE || {};
+  pending.forEach(r => window.__RX_CACHE[r.id] = r);
   document.getElementById('pending-rx-count').textContent = pending.length;
   document.getElementById('pending-rx-list').innerHTML = pending.length ? pending.map(r=>`
-    <div style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;margin-bottom:10px;">
+    <div class="pending-rx-card" ${canDo('dispense-rx')?`onclick="showRxDetails(${r.id})" style="cursor:pointer;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;margin-bottom:10px;transition:border-color .15s,background .15s;"`:`style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;margin-bottom:10px;"`}>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
         <div><div style="font-size:13px;font-weight:700;">${esc(r.patient_name)}</div><div style="font-size:12px;color:var(--teal);font-weight:600;">${esc(r.doctor_name||'')}</div></div>
-        ${canDo('dispense-rx')?`<button class="btn btn-green btn-sm" onclick="dispenseRx(${r.id})">Dispense</button>`:''}
+        ${canDo('dispense-rx')?`<span style="font-size:11px;color:var(--text-2);font-weight:600;">View →</span>`:''}
       </div><div style="font-size:12px;color:var(--text-2);">${esc(r.drug_name)} · ${esc(r.frequency)} · ${esc(r.duration)}</div></div>`).join('')
     : `<div class="empty"><div class="ei">✅</div><h3>Nothing pending</h3></div>`;
 }
+function showRxDetails(id){
+  const r = (window.__RX_CACHE || {})[id];
+  if (!r) { toast('Prescription not found','e'); return; }
+  const isPending = r.status === 'pending';
+  document.getElementById('m-rx-details-inner').innerHTML = `
+    <div class="modal-header"><h2>💊 Prescription Details</h2><button class="modal-close" onclick="closeModal('m-rx-details')">✕</button></div>
+    <div class="fg"><strong>Patient:</strong> ${esc(r.patient_name || 'N/A')}</div>
+    <div class="fg"><strong>Prescribing Dentist:</strong> ${esc(r.doctor_name || 'N/A')}</div>
+    <div class="fg"><strong>Drug:</strong> ${esc(r.drug_name)}</div>
+    <div class="form-row">
+      <div class="fg"><strong>Dosage:</strong> ${esc(r.dosage)}</div>
+      <div class="fg"><strong>Frequency:</strong> ${esc(r.frequency)}</div>
+    </div>
+    <div class="fg"><strong>Duration:</strong> ${esc(r.duration)}</div>
+    <div class="fg"><strong>Prescribed:</strong> ${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</div>
+    ${r.notes ? `<div class="fg"><strong>Notes:</strong><div style="white-space:pre-wrap;">${esc(r.notes)}</div></div>` : '<div class="fg"><strong>Notes:</strong> —</div>'}
+    <div class="fg"><strong>Status:</strong> <span class="badge ${statusBadge(r.status)}">${esc(r.status)}</span>
+      ${!isPending && r.dispensed_at ? `<span style="font-size:12px;color:var(--text-2);margin-left:8px;">Collected on ${new Date(r.dispensed_at).toLocaleDateString()}</span>` : ''}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+      <button class="btn btn-outline" onclick="closeModal('m-rx-details')">Close</button>
+      ${isPending && canDo('dispense-rx') ? `<button class="btn btn-green" onclick="dispenseRx(${r.id}); closeModal('m-rx-details');">✓ Mark as Collected</button>` : ''}
+    </div>`;
+  openModal('m-rx-details');
+}
+window.showRxDetails = showRxDetails;
 function openAddDrugModal(){
   document.getElementById('m-add-drug-inner').innerHTML = `
     <div class="modal-header"><h2>💊 Add Drug</h2><button class="modal-close" onclick="closeModal('m-add-drug')">✕</button></div>
@@ -1188,7 +1274,7 @@ async function renderStaff(){
   document.getElementById('staff-table').innerHTML = staff.length ? `
     <table><thead><tr><th>Name</th><th>Role</th><th>Specialization</th><th>Phone</th><th>Status</th><th></th></tr></thead>
     <tbody>${staff.map(s=>`<tr><td><strong>${esc(s.full_name)}</strong></td>
-      <td><span class="badge ${s.role==='dentist'?'badge-teal':s.role==='pharmacist'?'badge-purple':s.role==='admin'?'badge-rose':'badge-amber'}">${esc(s.role)}</span></td>
+      <td><span class="badge ${s.role==='dentist'?'badge-teal':s.role==='pharmacist'?'badge-purple':s.role==='admin'?'badge-rose':'badge-amber'}">${esc(ROLE_DISPLAY[s.role] || s.role)}</span></td>
       <td style="font-size:12px;color:var(--text-2);">${esc(s.specialization||'—')}</td><td style="font-size:12px;color:var(--text-2);">${esc(s.phone||'—')}</td>
       <td><span class="badge ${statusBadge(s.status)}">${esc(s.status)}</span></td>
       <td><button class="btn btn-outline btn-sm" onclick="toggleStaffStatus(${s.id},'${s.status==='active'?'inactive':'active'}')">${s.status==='active'?'Deactivate':'Activate'}</button></td>
@@ -1200,7 +1286,7 @@ function openAddStaffModal(){
     <div class="fg"><label>Full Name *</label><input type="text" id="st-name"></div>
     <div class="fg"><label>Email *</label><input type="email" id="st-email"></div>
     <div class="fg"><label>Temporary Password *</label><input type="text" id="st-pass"></div>
-    <div class="form-row"><div class="fg"><label>Role *</label><select id="st-role"><option value="dentist">Dentist</option><option value="receptionist">Receptionist</option><option value="pharmacist">Pharmacist</option><option value="nurse">Nurse</option><option value="admin">Admin</option></select></div>
+    <div class="form-row"><div class="fg"><label>Role *</label><select id="st-role"><option value="dentist">Dentist</option><option value="receptionist">Receptionist</option><option value="pharmacist">Pharmacist</option><option value="assistant">Nurse</option><option value="admin">Admin</option></select></div>
     <div class="fg"><label>Specialization</label><input type="text" id="st-spec"></div></div>
     <div class="fg"><label>Phone</label><input type="text" id="st-phone"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal('m-add-staff')">Cancel</button><button class="btn btn-teal" onclick="submitAddStaff()">Add Staff</button></div>`;
