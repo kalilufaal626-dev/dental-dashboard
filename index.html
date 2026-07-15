@@ -492,6 +492,7 @@ async function doLogin() {
 window.doLogin = doLogin;
 function logout(){
   TOKEN = null; USER = null;
+  window.CURRENT_TREATMENT_PLAN = null;
   localStorage.removeItem('dc_token'); localStorage.removeItem('dc_user');
   document.getElementById('auth-wrap').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
@@ -904,10 +905,43 @@ async function openPatientTreatmentPlansTab(button) {
 function toothIcon(c){ return {healthy:'⬜',cavity:'🟡',filling:'🔵',crown:'🟣','root-canal':'🔴',implant:'🟢',extraction:'✖'}[c]||'⬜'; }
 let CHART_MAP = {};
 function fillChartTab(rows){
-  CHART_MAP = {}; rows.forEach(r=>CHART_MAP[r.tooth_number]=r);
-  const toothHtml = n => { const r=CHART_MAP[n]; const cond=r?r.condition:'healthy';
-    return `<div class="tooth ${cond}" title="Tooth ${n}${r?' — '+cond:''}" onclick="toothClick(${n})"><div>${toothIcon(cond)}</div><div class="tooth-num">${n}</div></div>`; };
+  CHART_MAP = {};
+  (rows || []).forEach(r => CHART_MAP[r.tooth_number] = r);
+
+  const activePlan = window.CURRENT_TREATMENT_PLAN || null;
+  const plannedTeeth = (activePlan?.items || [])
+    .map(item => Number(item.tooth_number))
+    .filter(Boolean);
+
+  const toothHtml = n => {
+    const r = CHART_MAP[n];
+    const cond = r ? r.condition : 'healthy';
+    const isPlanned = plannedTeeth.includes(Number(n));
+
+    return `
+      <div
+        class="tooth ${cond}"
+        style="${isPlanned ? 'outline:3px solid #f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.2);transform:scale(1.06);' : ''}"
+        title="Tooth ${n}${r ? ' — ' + cond : ''}${isPlanned ? ' — In active treatment plan' : ''}"
+        onclick="toothClick(${n})"
+      >
+        <div>${toothIcon(cond)}</div>
+        <div class="tooth-num">${n}</div>
+      </div>
+    `;
+  };
+
+  const activePlanNotice = activePlan
+    ? `
+      <div class="notice notice-amber">
+        Active treatment plan:
+        <strong>${esc(activePlan.title || 'Treatment Plan')}</strong>
+      </div>
+    `
+    : '';
+
   document.getElementById('tab-chart').innerHTML = `
+    ${activePlanNotice}
     <div class="two-col">
       <div class="card"><div class="card-header"><span class="card-title">🦷 Dental Chart (Universal Numbering)</span>${canDo('update-tooth')?'':'<span class="badge badge-gray">View only</span>'}</div>
         <div style="padding:18px;">
@@ -948,35 +982,249 @@ async function saveTooth(num){
     const chart = await api(`/patients/${CURRENT_PATIENT_ID}/chart`); fillChartTab(chart);
   } catch(e){ toast(e.message,'e'); }
 }
+let EDITING_RECORD_ID = null;
+
 function fillRecordsTab(rows){
+  window.CURRENT_MEDICAL_RECORDS = rows || [];
+
   document.getElementById('tab-records').innerHTML = `
-    <div class="card"><div class="card-header"><span class="card-title">📋 Visit History</span>${canDo('add-record')?`<button class="btn btn-teal btn-sm" onclick="openAddRecordModal()">+ Add Record</button>`:''}</div>
-    <table><thead><tr><th>Date</th><th>Diagnosis</th><th>Treatment</th><th>Doctor</th><th>Vitals</th></tr></thead>
-    <tbody>${rows.length?rows.map(r=>`<tr><td style="font-size:12px;color:var(--text-2);">${new Date(r.created_at).toLocaleDateString()}</td>
-      <td>${esc(r.diagnosis||'—')}</td><td>${esc(r.treatment_done||'—')}</td><td style="font-size:12px;color:var(--text-2);">${esc(r.doctor_name||'—')}</td>
-      <td style="font-size:11px;color:var(--text-2);">${[r.bp&&'BP '+r.bp,r.temperature&&r.temperature+'°C',r.pulse&&r.pulse+' bpm'].filter(Boolean).join(' · ')||'—'}</td></tr>`).join(''):`<tr><td colspan="5" style="text-align:center;color:var(--text-2);">No records yet</td></tr>`}</tbody></table></div>`;
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 Visit History</span>
+        ${canDo('add-record') ? `<button class="btn btn-teal btn-sm" onclick="openAddRecordModal()">+ Add Record</button>` : ''}
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Diagnosis</th>
+              <th>Treatment</th>
+              <th>Doctor</th>
+              <th>Vitals</th>
+              <th>Next Visit</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.length
+                ? rows.map(r => `
+                  <tr>
+                    <td style="font-size:12px;color:var(--text-2);">
+                      ${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
+                    </td>
+
+                    <td>${esc(r.diagnosis || '—')}</td>
+
+                    <td>
+                      ${esc(r.treatment_done || r.procedure || '—')}
+                      ${r.tooth_number ? `<div style="font-size:11px;color:var(--text-2);">Tooth ${esc(r.tooth_number)}</div>` : ''}
+                    </td>
+
+                    <td style="font-size:12px;color:var(--text-2);">
+                      ${esc(r.doctor_name || '—')}
+                    </td>
+
+                    <td style="font-size:11px;color:var(--text-2);">
+                      ${
+                        [
+                          r.bp && `BP ${esc(r.bp)}`,
+                          r.temperature && `${esc(r.temperature)}°C`,
+                          r.pulse && `${esc(r.pulse)} bpm`,
+                          r.weight && `${esc(r.weight)} kg`,
+                          r.oxygen && `O₂ ${esc(r.oxygen)}%`
+                        ].filter(Boolean).join(' · ') || '—'
+                      }
+                    </td>
+
+                    <td style="font-size:12px;color:var(--text-2);">
+                      ${r.next_visit ? new Date(r.next_visit).toLocaleDateString() : '—'}
+                    </td>
+
+                    <td>
+                      <span class="badge ${statusBadge(r.visit_status || 'in_progress')}">
+                        ${esc((r.visit_status || 'in_progress').replaceAll('_', ' '))}
+                      </span>
+                    </td>
+
+                    <td>
+                      ${
+                        canDo('add-record')
+                          ? `
+                            <button
+                              class="btn btn-outline btn-sm"
+                              onclick="openEditRecordModal(${r.id})"
+                            >
+                              ✏️ Edit
+                            </button>
+                          `
+                          : '—'
+                      }
+                    </td>
+                  </tr>
+                `).join('')
+                : `
+                  <tr>
+                    <td colspan="8" style="text-align:center;color:var(--text-2);">
+                      No records yet
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
+
 function openAddRecordModal(){
+  EDITING_RECORD_ID = null;
+
   document.getElementById('m-add-record-inner').innerHTML = `
-    <div class="modal-header"><h2>📋 Add Consultation Record</h2><button class="modal-close" onclick="closeModal('m-add-record')">✕</button></div>
+    <div class="modal-header">
+      <h2>📋 Add Consultation Record</h2>
+      <button class="modal-close" onclick="closeModal('m-add-record')">✕</button>
+    </div>
+
     <div class="fg"><label>Diagnosis</label><input type="text" id="rec-diag"></div>
     <div class="fg"><label>Treatment Done</label><input type="text" id="rec-done"></div>
+    <div class="form-row">
+      <div class="fg"><label>Tooth Number</label><input type="text" id="rec-tooth"></div>
+      <div class="fg"><label>Procedure</label><input type="text" id="rec-procedure"></div>
+    </div>
+    <div class="fg"><label>Anaesthetic Used</label><input type="text" id="rec-anaesthetic"></div>
     <div class="fg"><label>Treatment Plan</label><input type="text" id="rec-plan"></div>
-    <div class="form-row"><div class="fg"><label>Blood Pressure</label><input type="text" id="rec-bp" placeholder="120/80"></div><div class="fg"><label>Temperature (°C)</label><input type="text" id="rec-temp"></div></div>
-    <div class="form-row"><div class="fg"><label>Pulse (bpm)</label><input type="text" id="rec-pulse"></div><div class="fg"><label>Weight (kg)</label><input type="text" id="rec-weight"></div></div>
-    <div class="fg"><label>Notes</label><textarea id="rec-notes" style="height:65px;resize:none;"></textarea></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal('m-add-record')">Cancel</button><button class="btn btn-teal" onclick="submitRecord()">Save</button></div>`;
+
+    <div class="form-row">
+      <div class="fg"><label>Blood Pressure</label><input type="text" id="rec-bp" placeholder="120/80"></div>
+      <div class="fg"><label>Temperature (°C)</label><input type="text" id="rec-temp"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="fg"><label>Pulse (bpm)</label><input type="text" id="rec-pulse"></div>
+      <div class="fg"><label>Weight (kg)</label><input type="text" id="rec-weight"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="fg">
+        <label>Oxygen Saturation (%)</label>
+        <input type="number" id="rec-oxygen" min="0" max="100" placeholder="98">
+      </div>
+
+      <div class="fg">
+        <label>Next Visit</label>
+        <input type="date" id="rec-next-visit">
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Visit Status</label>
+      <select id="rec-status">
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+        <option value="follow_up">Follow Up</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <div class="fg">
+      <label>Notes</label>
+      <textarea id="rec-notes" style="height:65px;resize:none;"></textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeModal('m-add-record')">Cancel</button>
+      <button class="btn btn-teal" id="record-save-btn" onclick="submitRecord()">Save Record</button>
+    </div>
+  `;
+
   openModal('m-add-record');
 }
-async function submitRecord(){
-  const body = { diagnosis: document.getElementById('rec-diag').value||null, treatment_done: document.getElementById('rec-done').value||null,
-    treatment_plan: document.getElementById('rec-plan').value||null, bp: document.getElementById('rec-bp').value||null,
-    temperature: document.getElementById('rec-temp').value||null, pulse: document.getElementById('rec-pulse').value||null,
-    weight: document.getElementById('rec-weight').value||null, notes: document.getElementById('rec-notes').value||null };
-  try { await api(`/patients/${CURRENT_PATIENT_ID}/records`, { method:'POST', body: JSON.stringify(body) });
-    closeModal('m-add-record'); toast('Record saved','s'); fillRecordsTab(await api(`/patients/${CURRENT_PATIENT_ID}/records`)); }
-  catch(e){ toast(e.message,'e'); }
+
+function openEditRecordModal(recordId){
+  const rows = window.CURRENT_MEDICAL_RECORDS || [];
+  const record = rows.find(r => String(r.id) === String(recordId));
+
+  if (!record) {
+    toast('Medical record not found', 'e');
+    return;
+  }
+
+  openAddRecordModal();
+  EDITING_RECORD_ID = record.id;
+
+  const title = document.querySelector('#m-add-record-inner .modal-header h2');
+  if (title) title.textContent = '✏️ Edit Consultation Record';
+
+  const saveButton = document.getElementById('record-save-btn');
+  if (saveButton) saveButton.textContent = 'Update Record';
+
+  document.getElementById('rec-diag').value = record.diagnosis || '';
+  document.getElementById('rec-done').value = record.treatment_done || '';
+  document.getElementById('rec-tooth').value = record.tooth_number || '';
+  document.getElementById('rec-procedure').value = record.procedure || '';
+  document.getElementById('rec-anaesthetic').value = record.anaesthetic_used || '';
+  document.getElementById('rec-plan').value = record.treatment_plan || '';
+  document.getElementById('rec-bp').value = record.bp || '';
+  document.getElementById('rec-temp').value = record.temperature || '';
+  document.getElementById('rec-pulse').value = record.pulse || '';
+  document.getElementById('rec-weight').value = record.weight || '';
+  document.getElementById('rec-oxygen').value = record.oxygen || '';
+  document.getElementById('rec-notes').value = record.notes || '';
+  document.getElementById('rec-next-visit').value =
+    record.next_visit ? String(record.next_visit).slice(0, 10) : '';
+  document.getElementById('rec-status').value =
+    record.visit_status || 'in_progress';
 }
+
+async function submitRecord(){
+  const body = {
+    diagnosis: document.getElementById('rec-diag').value || null,
+    treatment_done: document.getElementById('rec-done').value || null,
+    tooth_number: document.getElementById('rec-tooth').value || null,
+    procedure: document.getElementById('rec-procedure').value || null,
+    anaesthetic_used: document.getElementById('rec-anaesthetic').value || null,
+    treatment_plan: document.getElementById('rec-plan').value || null,
+    bp: document.getElementById('rec-bp').value || null,
+    temperature: document.getElementById('rec-temp').value || null,
+    pulse: document.getElementById('rec-pulse').value || null,
+    weight: document.getElementById('rec-weight').value || null,
+    oxygen: document.getElementById('rec-oxygen').value || null,
+    notes: document.getElementById('rec-notes').value || null,
+    next_visit: document.getElementById('rec-next-visit').value || null,
+    visit_status: document.getElementById('rec-status').value || 'in_progress'
+  };
+
+  const url = EDITING_RECORD_ID
+    ? `/patients/${CURRENT_PATIENT_ID}/records/${EDITING_RECORD_ID}`
+    : `/patients/${CURRENT_PATIENT_ID}/records`;
+
+  const method = EDITING_RECORD_ID ? 'PATCH' : 'POST';
+
+  try {
+    await api(url, {
+      method,
+      body: JSON.stringify(body)
+    });
+
+    const wasEditing = Boolean(EDITING_RECORD_ID);
+    EDITING_RECORD_ID = null;
+
+    closeModal('m-add-record');
+    toast(wasEditing ? 'Record updated' : 'Record saved', 's');
+
+    const records = await api(`/patients/${CURRENT_PATIENT_ID}/records`);
+    fillRecordsTab(records);
+  } catch(e) {
+    toast(e.message, 'e');
+  }
+}
+
 function fillXrayTab(rows){
   document.getElementById('tab-xray').innerHTML = `
     <div class="sec-hdr"><span></span>${canDo('add-xray')?`<button class="btn btn-teal btn-sm" onclick="openAddXrayModal()">+ Add X-Ray / Lab Result</button>`:''}</div>
