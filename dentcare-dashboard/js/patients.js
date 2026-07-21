@@ -36,7 +36,7 @@ function calculatePatientAge(dateOfBirth) {
     age -= 1;
   }
 
-  return age >= 0 ? String(age) : 'Not available';
+  return age >= 0 ?String(age) : 'Not available';
 }
 
 function getPatientName(patient) {
@@ -230,7 +230,7 @@ async function openPatientProfile(patient) {
 
   tabs.forEach((tabName) => {
     const button = create('button', {
-      class: tabName === 'Overview' ? 'tab-btn active' : 'tab-btn'
+      class: tabName === 'Overview' ?'tab-btn active' : 'tab-btn'
     }, [tabName]);
 
     button.addEventListener('click', async () => {
@@ -495,7 +495,7 @@ async function renderPatientRecords(patient) {
 
       recordCard.appendChild(
         create('strong', {}, [
-          recordDate ? formatDate(recordDate) : 'Record'
+          recordDate ?formatDate(recordDate) : 'Record'
         ])
       );
 
@@ -675,5 +675,91 @@ async function renderPatientXRays(patientId) {
     card.appendChild(
       create('div', {}, ['Failed to load X-rays'])
     );
+  }
+}
+async function renderPatientSummary(patientId, containerId = 'patient-summary') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = '<div class="spinner">Loading summary...</div>';
+
+  try {
+    const [
+      appointments,
+      treatmentPlans,
+      invoices,
+      prescriptions,
+      xrays
+    ] = await Promise.all([
+      api('/appointments'),
+      api('/treatment-plans'),
+      api('/invoices'),
+      api('/prescriptions'),
+      fetchPatientXRays(patientId)
+    ]);
+
+    const patientAppointments = (appointments || [])
+      .filter(a => String(a.patient_id) === String(patientId));
+
+    const patientPlans = (treatmentPlans || [])
+      .filter(p => String(p.patient_id) === String(patientId));
+
+    const patientInvoices = (invoices || [])
+      .filter(i => String(i.patient_id) === String(patientId));
+
+    const patientPrescriptions = (prescriptions || [])
+      .filter(p => String(p.patient_id) === String(patientId));
+
+    const outstanding = patientInvoices
+      .filter(i => i.status !== 'paid')
+      .reduce((sum, i) => sum + Number(i.total || i.amount || 0), 0);
+
+    const lastVisit = patientAppointments
+      .filter(a => new Date(a.date) <= new Date())
+      .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+
+    const nextVisit = patientAppointments
+      .filter(a => new Date(a.date) > new Date())
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+    container.innerHTML = `
+      <div class="summary-grid">
+
+        <div class="summary-card">
+          <h4>Last Visit</h4>
+          <p>${lastVisit ? formatDate(lastVisit.date) : 'None'}</p>
+        </div>
+
+        <div class="summary-card">
+          <h4>Next Appointment</h4>
+          <p>${nextVisit ? formatDate(nextVisit.date) : 'None'}</p>
+        </div>
+
+        <div class="summary-card">
+          <h4>Active Plans</h4>
+          <p>${patientPlans.length}</p>
+        </div>
+
+        <div class="summary-card">
+          <h4>Outstanding Balance</h4>
+          <p>D${outstanding.toLocaleString()}</p>
+        </div>
+
+        <div class="summary-card">
+          <h4>Prescriptions</h4>
+          <p>${patientPrescriptions.length}</p>
+        </div>
+
+        <div class="summary-card">
+          <h4>X-Rays</h4>
+          <p>${xrays.length}</p>
+        </div>
+
+      </div>
+    `;
+
+  } catch (err) {
+    container.innerHTML =
+      '<div class="empty">Unable to load summary.</div>';
   }
 }

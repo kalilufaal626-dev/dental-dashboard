@@ -38,7 +38,7 @@ async function filterAppts(){
       ${isPatient?'':`<td>${esc(a.patient_name)}</td>`}
       <td>${esc(a.treatment)}</td><td style="font-size:12px;color:var(--text-2);">${esc(a.doctor_name||'—')}</td>
       <td><span class="badge ${statusBadge(a.status)}">${esc(a.status)}</span></td>
-    </tr>`).join('')}</tbody></table>` : `<div class="empty"><div class="ei">📅</div><h3>No appointments found</h3></div>`;
+    </tr>`).join('')}</tbody></table>` : `<div class="empty"><div class="ei"></div><h3>No appointments found</h3></div>`;
 }
 
 function showAppointmentDetails(id){
@@ -46,7 +46,7 @@ function showAppointmentDetails(id){
   const appointment = appts.find(a=>String(a.id) === String(id));
   if (!appointment) { toast('Appointment not found','e'); return; }
   document.getElementById('m-appt-details-inner').innerHTML = `
-    <div class="modal-header"><h2>Appointment Details</h2><button class="modal-close" onclick="closeModal('m-appt-details')">✕</button></div>
+    <div class="modal-header"><h2>Appointment Details</h2><button class="modal-close" onclick="closeModal('m-appt-details')">×</button></div>
     <div class="fg"><strong>Patient:</strong> ${esc(appointment.patient_name || appointment.patient_id || 'N/A')}</div>
     <div class="fg"><strong>Dentist:</strong> ${esc(appointment.doctor_name || 'N/A')}</div>
     <div class="fg"><strong>Treatment:</strong> ${esc(appointment.treatment || 'N/A')}</div>
@@ -55,10 +55,10 @@ function showAppointmentDetails(id){
     <div class="fg"><strong>Status:</strong> <span class="badge ${statusBadge(appointment.status)}">${esc(appointment.status || 'N/A')}</span></div>
     ${appointment.notes ? `<div class="fg"><strong>Notes:</strong><div style="white-space:pre-wrap;">${esc(appointment.notes)}</div></div>` : '<div class="fg"><strong>Notes:</strong> —</div>'}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;">
-      <button class="btn btn-outline" onclick="closeModal('m-appt-details'); showPage('patient-profile', ${JSON.stringify(appointment.patient_id)} )">Open Patient</button>
-      <button class="btn btn-outline" onclick='closeModal("m-appt-details"); openBookApptModal(${JSON.stringify(appointment)})'>Edit</button>
+      ${canAccessPage('patient-profile') ? `<button class="btn btn-outline" onclick="closeModal('m-appt-details'); showPage('patient-profile', ${JSON.stringify(appointment.patient_id)} )">Open Patient</button>` : ''}
+      ${canDo('book-appt') ? `<button class="btn btn-outline" onclick='closeModal("m-appt-details"); openBookApptModal(${JSON.stringify(appointment)})'>Edit</button>
       <button class="btn btn-outline" onclick="updateApptStatus(${appointment.id}, 'cancelled', { closeModal: true })">Cancel</button>
-      <button class="btn btn-teal" onclick="updateApptStatus(${appointment.id}, 'completed', { closeModal: true })">Complete</button>
+      <button class="btn btn-teal" onclick="updateApptStatus(${appointment.id}, 'completed', { closeModal: true })">Complete</button>` : ''}
     </div>
   `;
   openModal('m-appt-details');
@@ -66,6 +66,7 @@ function showAppointmentDetails(id){
 
 async function updateApptStatus(id, status, options = {}){
   try {
+    if (!canDo('book-appt')) { toast('You do not have permission to update appointments','e'); return; }
     if (!status) return;
     await api(`/appointments/${id}`, { method:'PATCH', body: JSON.stringify({ status }) });
     if (options.closeModal) closeModal('m-appt-details');
@@ -80,6 +81,7 @@ async function updateApptStatus(id, status, options = {}){
 async function openBookApptModal(appointment = null){
   const isPatient = role() === 'patient';
   const editMode = !!appointment;
+  if (editMode && !canDo('book-appt')) { toast('You do not have permission to edit appointments','e'); return; }
   window.__EDIT_APPOINTMENT = appointment;
   let patientsOpts = '', doctorsOpts = '', doctorsWarning = '';
   if (!isPatient) {
@@ -97,7 +99,7 @@ async function openBookApptModal(appointment = null){
     doctorsOpts = dentists.map(d=>`<option value="${d.id}" ${appointment && String(d.id)===String(appointment.doctor_id)?'selected':''}>${esc(d.full_name)}${d.specialization?' — '+esc(d.specialization):''}</option>`).join('');
   } catch { doctorsWarning = `<div class="notice notice-amber">Couldn't load the dentist list. Add GET /dentists to the API.</div>`; }
   document.getElementById('m-book-inner').innerHTML = `
-    <div class="modal-header"><h2>📅 ${editMode ? 'Edit' : isPatient ? 'Request' : 'Book'} Appointment</h2><button class="modal-close" onclick="closeModal('m-book')">✕</button></div>
+    <div class="modal-header"><h2>${editMode ? 'Edit' : isPatient ? 'Request' : 'Book'} Appointment</h2><button class="modal-close" onclick="closeModal('m-book')">×</button></div>
     ${doctorsWarning}
     ${!isPatient ? `<div class="fg"><label>Patient *</label><select id="ba-patient">${patientsOpts||'<option value="">No patients found</option>'}</select></div>` : ''}
     <div class="form-row">
@@ -110,7 +112,7 @@ async function openBookApptModal(appointment = null){
       <option ${appointment && appointment.treatment==='Teeth Cleaning' ? 'selected' : ''}>Teeth Cleaning</option>
       <option ${appointment && appointment.treatment==='Tooth Extraction' ? 'selected' : ''}>Tooth Extraction</option>
       <option ${appointment && appointment.treatment==='Root Canal Treatment' ? 'selected' : ''}>Root Canal Treatment</option>
-      <option ${appointment && appointment.treatment==='Dental Filling' ? 'selected' : ''}>Dental Filing</option>
+      <option ${appointment && appointment.treatment==='Dental Filling' ? 'selected' : ''}>Dental Filling</option>
       <option ${appointment && appointment.treatment==='Crown Fitting' ? 'selected' : ''}>Crown Fitting</option>
       <option ${appointment && appointment.treatment==='Dental Implant' ? 'selected' : ''}>Dental Implant</option>
       <option ${appointment && appointment.treatment==='X-Ray' ? 'selected' : ''}>X-Ray</option>

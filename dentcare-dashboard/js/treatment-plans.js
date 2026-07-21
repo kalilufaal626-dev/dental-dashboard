@@ -202,7 +202,7 @@ function showTreatmentPlanModal(title, bodyHtml) {
         class="modal-close"
         id="tp-modal-close"
       >
-        ✕
+        ×
       </button>
     </div>
 
@@ -248,12 +248,12 @@ async function renderPatientTreatmentPlans(
       <div class="card">
         <div class="card-header">
           <span class="card-title">
-            📑 Treatment Plans
+             Treatment Plans
           </span>
 
           ${
             canEdit
-              ? `
+              ?`
                 <button
                   type="button"
                   class="btn btn-teal btn-sm"
@@ -286,7 +286,7 @@ async function renderPatientTreatmentPlans(
     if (!plans || plans.length === 0) {
       list.innerHTML = `
         <div class="empty">
-          <div class="ei">📑</div>
+          <div class="ei"></div>
 
           <h3>No treatment plans</h3>
 
@@ -337,23 +337,54 @@ async function renderPatientTreatmentPlans(
               }
             </h3>
 
-            <div
-              style="
-                font-size:12px;
-                color:var(--text-2);
-              "
-            >
-              Treatments:
-              ${(plan.items || []).length}
-            </div>
+          ${
+  plan.diagnosis
+    ? `
+      <div
+        style="
+          margin:6px 0;
+          color:#475569;
+        "
+      >
+        <strong>Diagnosis:</strong>
+        ${esc(plan.diagnosis)}
+      </div>
+    `
+    : ''
+}
 
             <div
               style="
-                font-size:12px;
-                color:var(--text-2);
+                margin:6px 0;
               "
             >
-              Estimated total:
+              <strong>Treatments:</strong>
+              ${(plan.items || []).length}
+            </div>
+
+            ${
+              plan.items &&
+              plan.items.length
+                ? `
+                  <div style="margin:8px 0;">
+                    ${plan.items.map(item => `
+                      <div style="font-size:13px;padding:2px 0;">
+                        • ${esc(item.service)}
+                        ${item.tooth_number ? ` (Tooth ${item.tooth_number})` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                `
+                : ''
+            }
+
+            <div
+              style="
+                margin-top:8px;
+                font-weight:600;
+              "
+            >
+              Estimated Cost:
               ${fmtMoney(
                 plan.estimated_total || 0
               )}
@@ -428,6 +459,24 @@ async function renderPatientTreatmentPlans(
         );
 
         actions.appendChild(editButton);
+
+        const startButton =
+          document.createElement('button');
+
+        startButton.type = 'button';
+        startButton.className =
+          'btn btn-teal btn-sm';
+        startButton.textContent =
+          'Start Treatment';
+
+        startButton.addEventListener(
+          'click',
+          () => {
+            startTreatment(plan);
+          }
+        );
+
+        actions.appendChild(startButton);
       }
 
       list.appendChild(card);
@@ -440,7 +489,7 @@ async function renderPatientTreatmentPlans(
 
     container.innerHTML = `
       <div class="empty">
-        <div class="ei">⚠️</div>
+        <div class="ei"></div>
 
         <h3>
           Could not load treatment plans
@@ -503,7 +552,7 @@ function openTreatmentPlanModal(
 
   showTreatmentPlanModal(
     existing
-      ? 'Edit Treatment Plan'
+      ?'Edit Treatment Plan'
       : 'New Treatment Plan',
     `
       <form id="tp-form">
@@ -749,7 +798,7 @@ function openTreatmentPlanModal(
           >
             ${
               existing
-                ? 'Save Changes'
+                ?'Save Changes'
                 : 'Save Treatment Plan'
             }
           </button>
@@ -1012,7 +1061,7 @@ function openTreatmentPlanModal(
 
         status:
           existing
-            ? existing.status
+            ?existing.status
             : 'draft',
 
         estimated_total:
@@ -1241,6 +1290,116 @@ async function viewTreatmentPlan(id) {
   }
 }
 
+async function startTreatment(plan) {
+  if (!plan) {
+    toast(
+      'Treatment plan not found',
+      'e'
+    );
+    return;
+  }
+
+  const firstPendingItem =
+    (plan.items || []).find(item =>
+      ['pending', 'in_progress'].includes(
+        item.status
+      )
+    ) ||
+    (plan.items || [])[0] ||
+    null;
+
+  const patientId =
+    Number(plan.patient_id);
+
+  if (!patientId) {
+    toast(
+      'This treatment plan has no valid patient ID',
+      'e'
+    );
+    return;
+  }
+
+  const procedureName =
+    firstPendingItem?.service ||
+    firstPendingItem?.description ||
+    plan.title ||
+    'Treatment';
+
+  const toothNumber =
+    firstPendingItem?.tooth_number
+      ? String(firstPendingItem.tooth_number)
+      : null;
+
+  const payload = {
+    treatment_plan_id: String(plan.id),
+
+    diagnosis: plan.diagnosis || null,
+
+    treatment_plan:
+      plan.title || 'Treatment Plan',
+
+    treatment_done: toothNumber
+      ? `${procedureName} — Tooth ${toothNumber}`
+      : procedureName,
+
+    tooth_number: toothNumber,
+
+    procedure: procedureName,
+
+    anaesthetic_used: null,
+
+    visit_status: 'in_progress',
+
+    notes: plan.notes || null
+  };
+
+  try {
+    const medicalRecord = await api(
+      `/patients/${patientId}/records`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      }
+    );
+
+    window.CURRENT_TREATMENT_PLAN = plan;
+    window.CURRENT_MEDICAL_RECORD =
+      medicalRecord;
+    window.CURRENT_PATIENT_ID = patientId;
+
+    toast(
+      'Treatment started and medical record created',
+      's'
+    );
+
+    await showPage(
+      'patient-profile',
+      patientId
+    );
+
+    setTimeout(() => {
+      const recordsButton =
+        document.querySelector(
+          '.tab-btn[onclick*="tab-records"]'
+        );
+
+      if (recordsButton) {
+        recordsButton.click();
+      }
+    }, 150);
+  } catch (error) {
+    console.error(
+      'Start treatment error:',
+      error
+    );
+    toast(
+      error.message ||
+        'Failed to start treatment',
+      'e'
+    );
+  }
+}
+
 // Make these functions available to indext.html.
 window.renderPatientTreatmentPlans =
   renderPatientTreatmentPlans;
@@ -1253,3 +1412,5 @@ window.viewTreatmentPlan =
 
 window.closeTreatmentPlanModal =
   closeTreatmentPlanModal;
+
+  window.startTreatment = startTreatment;

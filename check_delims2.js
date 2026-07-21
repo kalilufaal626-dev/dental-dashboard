@@ -1,5 +1,5 @@
 const fs = require('fs');
-const path = 'c:\\Users\\E SOHNA\\Videos\\dental\\indext.html';
+const path = 'c:\\Users\\E SOHNA\\Videos\\dental\\index.html';
 const s = fs.readFileSync(path,'utf8');
 const cnt = ch => (s.split(ch).length-1);
 console.log('backticks', cnt('`'));

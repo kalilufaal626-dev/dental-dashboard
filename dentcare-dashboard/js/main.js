@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     e.preventDefault();
     const email = el('#login-email').value;
     const pw = el('#login-password').value;
-    try{ await login(email,pw); openApp(); }
+    try{ await login(email,pw); }
     catch(e){}
   });
   const openReg = el('#open-register'); if(openReg) openReg.addEventListener('click', openPatientRegister);

@@ -12,7 +12,7 @@ function buildSidebar(){
     }
   });
   // add logout
-  const logoutBtn = create('div',{class:'nav-item',html:'🔓 Logout'});
+  const logoutBtn = create('div',{class:'nav-item',html:'Logout'});
   logoutBtn.addEventListener('click', ()=> logout());
   side.appendChild(logoutBtn);
 }

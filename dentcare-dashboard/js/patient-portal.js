@@ -2,11 +2,15 @@
 window.addEventListener('navigate', async (e)=>{
   if(!e.detail.page.startsWith('patient')) return;
   const page = e.detail.page;
-  if(page === 'patient-home') renderPatientHome();
-  if(page === 'patient-xrays') renderPatientXRays(window.APP_STATE.user && window.APP_STATE.user.patient_id);
+  const patientId=window.APP_STATE.user&&window.APP_STATE.user.patient_id;
+  if(page==='patient-home') await renderPatientHome();
+  if(page==='patient-xrays') await renderPortalPatientXRays(patientId);
+  if(page==='patient-record') await renderPortalPatientRecord(patientId);
+  if(page==='patient-billing') await renderPortalPatientBilling();
+  if(page==='patient-treatment-plans') await renderPortalTreatmentPlans(patientId);
 });
 
-async function renderPatientXRays(patientId){
+async function renderPortalPatientXRays(patientId){
   const container = el('#content'); if(!container) return; clear(container);
   container.appendChild(create('h2',{},['My X-Rays']));
   try{
@@ -23,6 +27,14 @@ async function renderPatientXRays(patientId){
     });
   }catch(e){ container.appendChild(create('div',{},['Failed to load X-rays'])); }
 }
+
+async function renderPortalPatientRecord(patientId){
+  const container=el('#content');clear(container);container.appendChild(create('h2',{},['My Record']));
+  if(!patientId){container.appendChild(create('div',{class:'card'},['Patient account is not linked to a record.']));return;}
+  try{const [patient,records]=await Promise.all([api(`/patients/${patientId}`),api(`/patients/${patientId}/records`)]);container.appendChild(create('div',{class:'card'},[`${patient.full_name||'Patient'} — Blood type: ${patient.blood_type||'Not recorded'} — Allergies: ${patient.allergies||'None recorded'}`]));if(!(records||[]).length){container.appendChild(create('div',{class:'card'},['No visit history available.']));return;}records.forEach(record=>container.appendChild(create('div',{class:'card'},[`${formatDate(record.created_at||record.date)} — ${record.diagnosis||record.treatment_done||record.notes||'Visit record'}`])));}catch(error){container.appendChild(create('div',{class:'card'},[error.message||'Failed to load your record']));}
+}
+async function renderPortalPatientBilling(){const container=el('#content');clear(container);container.appendChild(create('h2',{},['My Bills']));try{const invoices=await api('/invoices');if(!(invoices||[]).length){container.appendChild(create('div',{class:'card'},['No invoices found.']));return;}invoices.forEach(invoice=>container.appendChild(create('div',{class:'card'},[`${invoice.invoice_no||`Invoice #${invoice.id}`} — Total: D${Number(invoice.total||0).toFixed(2)} — Paid: D${Number(invoice.amount_paid||0).toFixed(2)} — ${invoice.status||''}`])));}catch(error){container.appendChild(create('div',{class:'card'},[error.message||'Failed to load invoices']));}}
+async function renderPortalTreatmentPlans(patientId){const container=el('#content');clear(container);container.appendChild(create('h2',{},['My Treatment Plans']));const target=create('div',{id:'patient-treatment-plans-content'},[]);container.appendChild(target);if(typeof renderPatientTreatmentPlans!=='function'){target.appendChild(create('div',{class:'card'},['Treatment plans are unavailable.']));return;}await renderPatientTreatmentPlans(patientId,'patient-treatment-plans-content');}
 
 async function renderPatientHome(){
   const container = el('#content'); clear(container);
@@ -47,4 +59,9 @@ async function renderPatientHome(){
   btn.addEventListener('click', ()=> renderReportForPatient(pid, true));
   rpt.appendChild(btn);
   container.appendChild(rpt);
+}
+
+async function renderReportForPatient(patientId,printImmediately=false){
+  if(!patientId){showToast('Patient account is not linked to a record');return;}
+  try{const [patient,records,chart]=await Promise.all([api(`/patients/${patientId}`),api(`/patients/${patientId}/records`),api(`/patients/${patientId}/chart`)]);const safe=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]);const report=`<!doctype html><html><head><title>Patient Report</title></head><body style="font-family:Arial;padding:30px"><h1>DentCare Pro</h1><h2>Patient Report</h2><p><strong>Name:</strong> ${safe(patient.full_name)}</p><p><strong>Patient ID:</strong> ${safe(patient.patient_id)}</p><p><strong>Blood type:</strong> ${safe(patient.blood_type||'Not recorded')}</p><p><strong>Allergies:</strong> ${safe(patient.allergies||'None recorded')}</p><h3>Dental Chart</h3>${(chart||[]).length?`<ul>${chart.map(item=>`<li>Tooth ${safe(item.tooth_number)}: ${safe(item.condition)}</li>`).join('')}</ul>`:'<p>No dental chart entries.</p>'}<h3>Visit History</h3>${(records||[]).length?`<ul>${records.map(item=>`<li>${safe(formatDate(item.created_at||item.date))}: ${safe(item.diagnosis||item.treatment_done||item.notes||'Visit')}</li>`).join('')}</ul>`:'<p>No visit history.</p>'}</body></html>`;const win=window.open('','_blank','width=800,height=900');if(!win){showToast('Allow pop-ups to open the report');return;}win.document.write(report);win.document.close();win.focus();if(printImmediately)win.print();}catch(error){showToast(error.message||'Failed to build patient report');}
 }

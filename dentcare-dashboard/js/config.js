@@ -1,5 +1,5 @@
 // Configuration constants — declare all before use
-const API_BASE = "https://dental-92vv.onrender.com";
+const API_BASE = "https://dental-production-a97a.up.railway.app";
 
 const APP_VERSION = '0.1.0';
 
@@ -13,20 +13,24 @@ const ROLE_PERMISSIONS = {
 };
 
 const NAV_CONFIG = [
-  {id:'dashboard',label:'Dashboard',icon:'🏠'},
-  {id:'treatment-plans',label:'Treatment Plans',icon:'🩺'},
-  {id:'patients',label:'Patients',icon:'🧾'},
-  {id:'appointments',label:'Appointments',icon:'📅'},
-  {id:'dental-chart',label:'Dental Chart',icon:'🦷'},
-  {id:'medical-records',label:'Medical Records',icon:'🩺'},
-  {id:'prescriptions',label:'Prescriptions',icon:'💊'},
-  {id:'pharmacy',label:'Pharmacy',icon:'🏥'},
-  {id:'billing',label:'Billing',icon:'💳'},
-  {id:'xrays',label:'X-Rays',icon:'🖼️'},
-  {id:'patient-treatment-plans',label:'My Treatment Plans',icon:'🩺'},
-  {id:'patient-xrays',label:'My X-Rays',icon:'🖼️'},
-  {id:'staff',label:'Staff',icon:'👥'},
-  {id:'settings',label:'Settings',icon:'⚙️'}
+  {id:'dashboard',label:'Dashboard',icon:''},
+  {id:'treatment-plans',label:'Treatment Plans',icon:''},
+  {id:'patients',label:'Patients',icon:''},
+  {id:'appointments',label:'Appointments',icon:''},
+  {id:'dental-chart',label:'Dental Chart',icon:''},
+  {id:'medical-records',label:'Medical Records',icon:''},
+  {id:'prescriptions',label:'Prescriptions',icon:''},
+  {id:'pharmacy',label:'Pharmacy',icon:''},
+  {id:'billing',label:'Billing',icon:''},
+  {id:'xrays',label:'X-Rays',icon:''},
+  {id:'patient-treatment-plans',label:'My Treatment Plans',icon:''},
+  {id:'patient-xrays',label:'My X-Rays',icon:''},
+  {id:'patient-home',label:'My Dashboard',icon:''},
+  {id:'patient-appointments',label:'My Appointments',icon:''},
+  {id:'patient-record',label:'My Record',icon:''},
+  {id:'patient-billing',label:'My Bills',icon:''},
+  {id:'staff',label:'Staff',icon:''},
+  {id:'settings',label:'Settings',icon:''}
 ];
 
 const PAGE_TITLES = {
